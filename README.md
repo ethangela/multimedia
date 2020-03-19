@@ -1,5 +1,4 @@
 # multimedia
 source code for CS6240 Multimedia Analysis 
 
-### Requirements for clip_video.py 
-Package Requirements: moviepy
+####### 1 Requirements for clip_video.py: moviepy
