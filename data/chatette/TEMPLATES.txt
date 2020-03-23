@@ -1,0 +1,31 @@
+// This template defines different ways to ask for the location of toilets (Chatette version)
+%[horse riding](50)
+	[the] ~[person] is ~[riding] ~[on] [the] ~[horse]
+	~[horseback] riding ~[activity]
+	~[riding] [a|an] ~[horse]
+
+~[person]
+	boy
+	girl
+	person
+	female 
+	male
+	young [lady|man]
+
+~[riding]
+	[sitting] on the back
+	playing
+
+~[on]
+	with
+
+~[horse]
+	horse
+	some animal
+	animal
+
+~[horseback]
+	animal 
+
+~[activity]
+	event
