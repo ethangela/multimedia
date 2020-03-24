@@ -6,7 +6,7 @@ Refer to [chatette](https://github.com/SimGus/Chatette) for instructions on how 
 
 Generate sample sentences via
 ```python
-python3 -m TEMPLATES.txt 
+python3 -m chatette TEMPLATES.txt 
 ```
 
 Generated text files will be stored in `output/train/output.json`

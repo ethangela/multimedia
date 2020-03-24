@@ -1,19 +1,19 @@
 // This template defines different ways to ask for the location of toilets (Chatette version)
-%[horse riding](40)
+%[horse riding](50)
 	[the] ~[person] is ~[riding] ~[on] [the] ~[horse]
 	~[horseback] riding ~[activity]
 	~[riding] [a|an] ~[horse]
 
-%[Grooming horse](40)
+%[Grooming horse](50)
 	~[grooming] a ~[horse]
 	~[horse] ~[grooming] ~[session]
 
-%[Belly dance](40)
+%[Belly dance](50)
 	~[women] ~[doing] [a] ~[belly dance]
 	~[women] ~[belly dance]
 	scenes with ~[belly dance]
 
-%[Breakdancing](40)
+%[Breakdancing](50)
 	~[person] ~[breakdancing]
 	~[person] ~[doing] [a] ~[breakdancing]
 	~[breakdancing] in public
@@ -23,8 +23,6 @@
 // TODO: Rope skipping
 
 ~[person]
-	boy
-	girl
 	person
 	female 
 	male
@@ -45,10 +43,14 @@
 	animal
 
 ~[horseback]
-	animal 
+	animal
+	horse
+	horseback 
 
 ~[activity]
 	event
+	activity
+	occassion
 
 ~[grooming]
 	brushing
@@ -77,8 +79,10 @@
 	belly dancer
 	dancing with belly
 	shaking belly
+	dancing with belly
 
 ~[breakdancing]
 	break dancing
 	break dance 
-	fast action break dancing
+	fast action dancing
+
