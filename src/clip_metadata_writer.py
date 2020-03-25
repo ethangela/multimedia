@@ -14,7 +14,7 @@ def build_video_df(video_root: str) -> pd.DataFrame:
 	"""
 	Iteratively traverses video_root to gather all video clips in a DF
 
-	cols:	video_realpath | youtube_id
+	cols:	full_video_path | youtube_id
 
 	Parameters:
 	video_root (str) 	- Root directory for all raw, unedited video clips
@@ -28,17 +28,19 @@ def build_video_df(video_root: str) -> pd.DataFrame:
 				video_realpath = os.path.join(directory, each_file)
 				video_data.append((video_realpath, video_id))
 
-	return pd.DataFrame(video_data, columns=["video_realpath", "youtube_id"])
+	return pd.DataFrame(video_data, columns=["full_video_path", "youtube_id"])
 
 def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -> pd.DataFrame:
 	"""
 	Only video IDs present in video_df will be kept
 	Other information will be discarded
 
-	Cols: video_realpath | youtube_id | classname | start | end
+	Cols: full_video_path | youtube_id | unique_clip_name | classname | start | end
 	"""
 	merged_df = pd.merge(video_df, video_metadata, how="inner", on="youtube_id")
-	return merged_df.drop(["subset", "label"], axis=1)
+	merged_df["_vid_indx"] = merged_df.groupby("youtube_id").cumcount()
+	merged_df["unique_clip_name"] = merged_df.apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
+	return merged_df.drop(["subset", "label", "_vid_indx"], axis=1)
 
 if __name__ == "__main__":
 	video_metadata_df 	= pd.read_csv(RESOURCE_FILE)
