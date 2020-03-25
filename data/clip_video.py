@@ -24,5 +24,5 @@ def clip(video_address):
     
     
 if __name__ == '__main__':
-    video_address = ''
+    video_address = '/home/johan/Downloads/evolve_shooting.mp4'
     clip(video_address)
