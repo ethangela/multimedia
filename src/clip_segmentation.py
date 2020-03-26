@@ -92,7 +92,8 @@ if __name__ == "__main__":
 	
 	# Write out segment metadata
 	segment_metadata_path = os.path.join(VIDEO_METADATA_PATH, "segment_metadata.csv")
+	logging.info("Writing segment metadata file: {0}".format(segment_metadata_path))
 	segment_metadata_df.to_csv(segment_metadata_path)
 
-	# Begin writing segmenteds to file
+	# Begin writing segmented to file
 	
