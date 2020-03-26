@@ -47,5 +47,8 @@ class VideoSegmentation(object):
 		end_index 		= int((end_time / video.duration) * total_frames)
 		return (start_index, end_index)
 
-	def segment(self, video: str, start_time: int, end_time: int) -> moviepy.video.io.VideoFileClip.VideoFileClip:
-		return VideoFileClip(video).subclip(start_time, end_time)
+	def segment(self, video: moviepy.video.io.VideoFileClip.VideoFileClip, start_time: int, end_time: int) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+		return video.subclip(start_time, end_time)
+
+	def readAsVideo(self, video_path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+		return VideoFileClip(video_path)

@@ -1,4 +1,7 @@
+import moviepy
 import pandas as pd
+from moviepy.editor import *
+from typing import Dict
 
 class DatasetWriter(object):
 	def writeVideo(self, clip: moviepy.video.io.VideoFileClip.VideoFileClip, location: str, *, params: Dict = {}) -> None:
