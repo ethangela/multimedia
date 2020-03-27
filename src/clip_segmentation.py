@@ -78,8 +78,8 @@ def extract_segment_timings(row) -> pd.Series:
 		del video
 		return pd.Series([segment_time_start, segment_time_end])
 	except Exception as ex:
-		logging.warning("Exception for file: {0}".format(video_path=row["full_video_path"]))
-		logging.warning(ex)
+		logging.error("PID: {0} Exception for file: {1}".format(os.getpid(), row["full_video_path"]))
+		logging.error(ex)
 		raise ex
 
 def extract_segment_path(row) -> str:
