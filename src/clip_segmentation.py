@@ -53,7 +53,6 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	For safety, only evaluate ground truth if video's duration is as long or longer than CLIP_DURATION
 	"""
-	logging.info("Extracting ground truth for {0}".format(row["full_video_path"]))
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
 	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
@@ -64,6 +63,8 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 
 	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
 												truth_frames=(key_segment_frames_start, key_segement_frames_end))
+	del video.reader
+	del video
 	return encoded_arr
 
 def extract_segment_timings(row) -> pd.Series:
@@ -74,6 +75,8 @@ def extract_segment_timings(row) -> pd.Series:
 	video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
 	video_duration 			= video.duration
 	(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
+	del video.reader
+	del video
 	return pd.Series([segment_time_start, segment_time_end])
 
 def extract_segment_path(row) -> str:
@@ -90,8 +93,13 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 	_metadata_df = pd.concat([_metadata_df, pd.DataFrame(columns=["segmented_clips_path", "segment_time_start", "segment_time_end", "ground_truth"])])
 
 	_metadata_df["segmented_clips_path"] = _metadata_df.progress_apply(lambda row: extract_segment_path(row), axis=1)
+	logging.info("PID: {0} Segment path extraction completed".format(os.getpid()))
+
 	_metadata_df[["segment_time_start", "segment_time_end"]] = _metadata_df.progress_apply(lambda row: extract_segment_timings(row), axis=1)
+	logging.info("PID: {0} Segment timing extraction completed".format(os.getpid()))
+
 	_metadata_df["ground_truth"] = _metadata_df.progress_apply(lambda row: extract_segment_ground_truth(row), axis=1)
+	logging.info("PID: {0} Segment ground truth extraction completed".format(os.getpid()))
 	return _metadata_df
 
 def exec_segment_clip_metadata(metadata_df: pd.DataFrame) -> None:
