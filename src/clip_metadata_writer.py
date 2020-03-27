@@ -5,10 +5,13 @@ Script to identify relevant portions in a video clip, crop out the video and wri
 import logging
 import os
 import pandas as pd
+from tqdm import tqdm
 
 RESOURCE_FILE 		= os.environ["RESOURCE_FILE"] 	# CSV file
 UNEDITED_CLIPS_ROOT = os.environ["CLIPS_ROOT"] 		# To raw video files
 VIDEO_METADATA_PATH = os.environ["METADATA_PATH"]
+
+tqdm.pandas()
 
 def build_video_df(video_root: str) -> pd.DataFrame:
 	"""
@@ -39,7 +42,7 @@ def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -
 	"""
 	merged_df = pd.merge(video_df, video_metadata, how="inner", on="youtube_id")
 	merged_df["_vid_indx"] = merged_df.groupby("youtube_id").cumcount()
-	merged_df["unique_clip_name"] = merged_df.apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
+	merged_df["unique_clip_name"] = merged_df.progress_apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
 	return merged_df.drop(["subset", "label", "_vid_indx"], axis=1)
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ from editing.segmentation import VideoSegmentation
 from editing.writer import DatasetWriter
 from functools import partial
 from pathlib import Path
+from tqdm import tqdm
 
 MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
 CLIP_DURATION 			= int(os.environ.get("CLIP_DURATION", 4))
@@ -20,6 +21,7 @@ SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root 
 VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
 
 logging.basicConfig(level=logging.INFO)
+tqdm.pandas()
 
 segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()
@@ -83,9 +85,9 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 	_metadata_df = copy.copy(metadata_df)
 	_metadata_df = pd.concat([_metadata_df, pd.DataFrame(columns=["segmented_clips_path", "segment_time_start", "segment_time_end", "ground_truth"])])
 
-	_metadata_df["segmented_clips_path"] = _metadata_df.apply(lambda row: extract_segment_path(row), axis=1)
-	_metadata_df[["segment_time_start", "segment_time_end"]] = _metadata_df.apply(lambda row: extract_segment_timings(row), axis=1)
-	_metadata_df["ground_truth"] = _metadata_df.apply(lambda row: extract_segment_ground_truth(row), axis=1)
+	_metadata_df["segmented_clips_path"] = _metadata_df.progress_apply(lambda row: extract_segment_path(row), axis=1)
+	_metadata_df[["segment_time_start", "segment_time_end"]] = _metadata_df.progress_apply(lambda row: extract_segment_timings(row), axis=1)
+	_metadata_df["ground_truth"] = _metadata_df.progress_apply(lambda row: extract_segment_ground_truth(row), axis=1)
 	return _metadata_df
 
 # def split(A: int, B: int, N: int) -> ((int, int)):
