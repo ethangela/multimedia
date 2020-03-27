@@ -3,6 +3,7 @@ Script to segment video clips
 """
 
 import copy
+import glob
 import logging
 import os
 import multiprocessing
@@ -18,6 +19,7 @@ MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count(
 CLIP_DURATION 			= int(os.environ.get("CLIP_DURATION", 4))
 UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
+SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_splits")
 VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
 
 logging.basicConfig(level=logging.INFO)
@@ -90,18 +92,16 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 	_metadata_df["ground_truth"] = _metadata_df.progress_apply(lambda row: extract_segment_ground_truth(row), axis=1)
 	return _metadata_df
 
-# def split(A: int, B: int, N: int) -> ((int, int)):
-# 	"""
-# 	Splits the number range from A - B into N equal chunks
-# 	"""
-# 	_splits = []
-# 	quotient, remainder = divmod(B - A +1, N)
-# 	start 	= A
-# 	while start < B:
-# 		_splits.append((start, start + quotient - 1 + max(min(1, remainder), 0)))
-# 		start 		= start + quotient + max(min(1, remainder), 0)
-# 		remainder 	-= 1
-# 	return tuple(_splits)
+def exec_segment_clip_metadata(metadata_df: pd.DataFrame) -> None:
+	if metadata_df.empty:
+		logging.info("PID {0}: Empty dataframe received".format(os.getpid()))
+	else:
+		# Write out segment metadata
+		segment_metadata_df = get_segemnt_clip_metadata(metadata_df = metadata_df)
+		segment_metadata_path = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "{0}_segment_metadata.csv".format(os.getpid()))
+		logging.info("Writing segment metadata file: {0}".format(segment_metadata_path))
+		data_writer.writeCsv(df = segment_metadata_df, location = segment_metadata_path)
+	return
 
 def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
 	for _, row in segment_metadata_df.iterrows():
@@ -111,16 +111,18 @@ def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
 		logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
 
+def exec_write_segment_clip(path_to_df: str) -> None:
+	segment_metadata_df = pd.read_csv(path_to_df)
+	write_segment_clip(segment_metadata_df = segment_metadata_df)
+	return
+
 if __name__ == "__main__":
-	video_metadata_df 	= pd.read_csv(VIDEO_METADATA_PATH)
-	segment_metadata_df = get_segemnt_clip_metadata(metadata_df=video_metadata_df)
-	
-	# Write out segment metadata
-	segment_metadata_path = os.path.join(SEGMENTED_CLIPS_ROOT, "segment_metadata.csv")
-	logging.info("Writing segment metadata file: {0}".format(segment_metadata_path))
-	segment_metadata_df.to_csv(segment_metadata_path)
+	video_metadata_df 			= pd.read_csv(VIDEO_METADATA_PATH)
+	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
+	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
+		pool.map(exec_segment_clip_metadata, video_metadata_df_splits)
 
 	# Begin writing segmented to file
-	df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
+	segment_metadata_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-		pool.map(write_segment_clip, df_splits)
+		pool.map(exec_write_segment_clip, segment_metadata_files)
