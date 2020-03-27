@@ -53,8 +53,8 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	For safety, only evaluate ground truth if video's duration is as long or longer than CLIP_DURATION
 	"""
+	logging.info("Extracting ground truth for {0}".format(row["full_video_path"]))
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-	encoded_arr 	= None
 	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
 	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
