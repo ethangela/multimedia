@@ -68,16 +68,19 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	return encoded_arr
 
 def extract_segment_timings(row) -> pd.Series:
-	"""
-	"""
-	key_segment_time_start 	= row["start"]
-	key_segment_time_end 	= row["end"]
-	video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-	video_duration 			= video.duration
-	(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
-	del video.reader
-	del video
-	return pd.Series([segment_time_start, segment_time_end])
+	try:
+		key_segment_time_start 	= row["start"]
+		key_segment_time_end 	= row["end"]
+		video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+		video_duration 			= video.duration
+		(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
+		del video.reader
+		del video
+		return pd.Series([segment_time_start, segment_time_end])
+	except Exception as ex:
+		logging.warning("Exception for file: {0}".format(video_path=row["full_video_path"]))
+		logging.warning(ex)
+		raise ex
 
 def extract_segment_path(row) -> str:
 	class_name 			= row["classname"].strip().replace(" ", "_")	
