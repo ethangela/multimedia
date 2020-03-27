@@ -53,19 +53,24 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	For safety, only evaluate ground truth if video's duration is as long or longer than CLIP_DURATION
 	"""
-	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
+	try:
+		video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+		segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
-	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
-																						end_time=row["segment_time_end"])
-	(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
-																						end_time=row["end"])
+		(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
+																							end_time=row["segment_time_end"])
+		(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
+																							end_time=row["end"])
 
-	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
-												truth_frames=(key_segment_frames_start, key_segement_frames_end))
-	del video.reader
-	del video
-	return encoded_arr
+		encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
+													truth_frames=(key_segment_frames_start, key_segement_frames_end))
+		del video.reader
+		del video
+		return encoded_arr
+	except Exception as ex:
+		logging.error("PID: {0} Exception for file: {1}".format(os.getpid(), row["full_video_path"]))
+		logging.error(ex)
+		raise ex
 
 def extract_segment_timings(row) -> pd.Series:
 	try:
