@@ -28,7 +28,7 @@ tqdm.pandas()
 segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()
 
-def get_segment_bounds(start: int, end: int) -> (int, int):
+def get_segment_bounds(duration:int, start: int, end: int) -> (int, int):
 	"""
 	Strictly segments a clip on "CLIP_DURATION" seconds, containing start - end seconds of the clip
 	"""
@@ -42,6 +42,9 @@ def get_segment_bounds(start: int, end: int) -> (int, int):
 	if segment_start < 0:
 		segment_end 	+= -1 *segment_start
 		segment_start 	= 0
+	elif segment_end > duration:
+		segment_start 	-= segment_end - duration
+		segment_end 	= duration
 
 	assert segment_end - segment_start == CLIP_DURATION
 	return (segment_start, segment_end)
@@ -52,18 +55,15 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
 	encoded_arr 	= None
-	if video.duration >= row["segment_time_end"]:
-		segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
+	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
-		(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
-																							end_time=row["segment_time_end"])
-		(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
-																							end_time=row["end"])
+	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
+																						end_time=row["segment_time_end"])
+	(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
+																						end_time=row["end"])
 
-		encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
-													truth_frames=(key_segment_frames_start, key_segement_frames_end))
-	else:
-		logging.warning("Ignoring ground_truth computation for video duration {0} < {1}s".format(video.duration, row["segment_time_end"]))
+	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
+												truth_frames=(key_segment_frames_start, key_segement_frames_end))
 	return encoded_arr
 
 def extract_segment_timings(row) -> pd.Series:
@@ -71,7 +71,9 @@ def extract_segment_timings(row) -> pd.Series:
 	"""
 	key_segment_time_start 	= row["start"]
 	key_segment_time_end 	= row["end"]
-	(segment_time_start, segment_time_end) = get_segment_bounds(start=key_segment_time_start, end=key_segment_time_end)
+	video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+	video_duration 			= video.duration
+	(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
 	return pd.Series([segment_time_start, segment_time_end])
 
 def extract_segment_path(row) -> str:
@@ -117,12 +119,19 @@ def exec_write_segment_clip(path_to_df: str) -> None:
 	return
 
 if __name__ == "__main__":
+	# Delete all files within SEGMENTED_CLIPS_PATH directory for idempotency
+	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
+	logging.warning("Deleting prior files: {0}".format(prior_segment_metadata_files))
+	for prior_files in prior_segment_metadata_files:
+		os.remove(prior_files)
+
+	# Write split files to SEGMENTED_CLIPS_PATH
 	video_metadata_df 			= pd.read_csv(VIDEO_METADATA_PATH)
 	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
 		pool.map(exec_segment_clip_metadata, video_metadata_df_splits)
 
-	# Begin writing segmented to file
+	# Begin writing segments to dfs
 	segment_metadata_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
 		pool.map(exec_write_segment_clip, segment_metadata_files)
