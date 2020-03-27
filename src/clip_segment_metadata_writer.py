@@ -17,7 +17,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
-CLIP_DURATION 			= int(os.environ.get("CLIP_DURATION", 4))
+CLIP_ADDITIONAL_WIDTH 	= int(os.environ.get("CLIP_ADDITIONAL_WIDTH", 1))
 UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_splits")
@@ -31,30 +31,16 @@ data_writer 	= DatasetWriter()
 
 def get_segment_bounds(duration:int, start: int, end: int) -> (int, int):
 	"""
-	Strictly segments a clip on "CLIP_DURATION" seconds, containing start - end seconds of the clip
+	Defines video segment to crop, with (start, end) as the center of the segmented clip
+	We attempt to add CLIP_ADDITIONAL_WIDTH seconds to the start and end of the video
+	If this bounds exceeds the video's duration, we peg the value to the duration
 	"""
-	key_frames_duration = end - start
-	assert key_frames_duration <= CLIP_DURATION
-	
-	segment_bounds 		= (CLIP_DURATION - key_frames_duration) / 2
-	segment_start 		= start - segment_bounds
-	segment_end 		= end + segment_bounds
-
-	if segment_start < 0:
-		segment_end 	+= -1 *segment_start
-		segment_start 	= 0
-	elif segment_end > duration:
-		segment_start 	-= segment_end - duration
-		segment_end 	= duration
-
-	assert segment_end - segment_start == CLIP_DURATION
+	segment_start 	= max(0, start - CLIP_ADDITIONAL_WIDTH)
+	segment_end 	= min(duration, end + CLIP_ADDITIONAL_WIDTH)
 	return (segment_start, segment_end)
 
 @multiple_executions_wrapper
 def extract_segment_ground_truth(row) -> np.ndarray:
-	"""
-	For safety, only evaluate ground truth if video's duration is as long or longer than CLIP_DURATION
-	"""
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
 	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
@@ -115,19 +101,6 @@ def exec_segment_clip_metadata(metadata_df: pd.DataFrame) -> None:
 		data_writer.writeCsv(df = segment_metadata_df, location = segment_metadata_path)
 	return
 
-def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
-	for _, row in segment_metadata_df.iterrows():
-		full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
-		clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
-		data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
-		logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
-	return
-
-def exec_write_segment_clip(path_to_df: str) -> None:
-	segment_metadata_df = pd.read_csv(path_to_df)
-	write_segment_clip(segment_metadata_df = segment_metadata_df)
-	return
-
 if __name__ == "__main__":
 	# Delete all files within SEGMENTED_CLIPS_PATH directory for idempotency
 	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
@@ -140,8 +113,3 @@ if __name__ == "__main__":
 	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
 		pool.map(exec_segment_clip_metadata, video_metadata_df_splits)
-
-	# Begin writing segments to dfs
-	segment_metadata_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
-	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-		pool.map(exec_write_segment_clip, segment_metadata_files)
