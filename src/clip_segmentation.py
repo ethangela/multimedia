@@ -5,12 +5,15 @@ Script to segment video clips
 import copy
 import logging
 import os
+import multiprocessing
 import numpy as np
 import pandas as pd
 from editing.segmentation import VideoSegmentation
 from editing.writer import DatasetWriter
+from functools import partial
 from pathlib import Path
 
+MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
 CLIP_DURATION 			= int(os.environ.get("CLIP_DURATION", 4))
 UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
@@ -18,16 +21,8 @@ VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
 
 logging.basicConfig(filename='clip_segmentation.log',level=logging.DEBUG)
 
-segmenter_obj = VideoSegmentation()
-
-def create_dir(path: str) -> None:
-	"""
-	Attempts to create the directory specified if it does not exist
-	Nested directories are supported
-	"""
-	_path = Path(path)
-	_path.mkdir(parents=True, exist_ok=True)
-	return 
+segmenter_obj 	= VideoSegmentation()
+data_writer 	= DatasetWriter()
 
 def get_segment_bounds(start: int, end: int) -> (int, int):
 	"""
@@ -85,15 +80,38 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 	_metadata_df[["segment_time_start", "segment_time_end"]] = _metadata_df.apply(lambda row: extract_segment_timings(row), axis=1)
 	_metadata_df["ground_truth"] = _metadata_df.apply(lambda row: extract_segment_ground_truth(row), axis=1)
 	return _metadata_df
-		
+
+# def split(A: int, B: int, N: int) -> ((int, int)):
+# 	"""
+# 	Splits the number range from A - B into N equal chunks
+# 	"""
+# 	_splits = []
+# 	quotient, remainder = divmod(B - A +1, N)
+# 	start 	= A
+# 	while start < B:
+# 		_splits.append((start, start + quotient - 1 + max(min(1, remainder), 0)))
+# 		start 		= start + quotient + max(min(1, remainder), 0)
+# 		remainder 	-= 1
+# 	return tuple(_splits)
+
+def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
+	for _, row in segment_metadata_df.iterrows():
+		full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
+		clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
+		data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
+		logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
+	return
+
 if __name__ == "__main__":
 	video_metadata_df 	= pd.read_csv(VIDEO_METADATA_PATH)
 	segment_metadata_df = get_segemnt_clip_metadata(metadata_df=video_metadata_df)
 	
 	# Write out segment metadata
-	segment_metadata_path = os.path.join(VIDEO_METADATA_PATH, "segment_metadata.csv")
+	segment_metadata_path = os.path.join(SEGMENTED_CLIPS_ROOT, "segment_metadata.csv")
 	logging.info("Writing segment metadata file: {0}".format(segment_metadata_path))
 	segment_metadata_df.to_csv(segment_metadata_path)
 
 	# Begin writing segmented to file
-	
+	df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
+	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
+		pool.map(write_segment_clip, df_splits)
