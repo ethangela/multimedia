@@ -48,7 +48,7 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
 	encoded_arr 	= None
-	if video.duration >= CLIP_DURATION:
+	if video.duration >= row["segment_time_end"]:
 		segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
 		(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
@@ -59,7 +59,7 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 		encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
 													truth_frames=(key_segment_frames_start, key_segement_frames_end))
 	else:
-		logging.warning("Ignoring ground_truth computation for video duration {0} < {1}s".format(video.duration, CLIP_DURATION))
+		logging.warning("Ignoring ground_truth computation for video duration {0} < {1}s".format(video.duration, row["segment_time_end"]))
 	return encoded_arr
 
 def extract_segment_timings(row) -> pd.Series:
