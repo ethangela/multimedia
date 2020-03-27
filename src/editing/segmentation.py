@@ -41,10 +41,9 @@ class VideoSegmentation(object):
 		Returns:
 		(int, int) - (start_frame_index, end_frame_index)
 		"""
-		assert video.duration >= end_time >= start_time
 		total_frames 	= int(video.fps * video.duration)
-		start_index 	= int((start_time / video.duration) * total_frames)
-		end_index 		= int((end_time / video.duration) * total_frames)
+		start_index 	= max(0, int((start_time / video.duration) * total_frames))
+		end_index 		= min(total_frames, int((end_time / video.duration) * total_frames))
 		return (start_index, end_index)
 
 	def segment(self, video: moviepy.video.io.VideoFileClip.VideoFileClip, start_time: int, end_time: int) -> moviepy.video.io.VideoFileClip.VideoFileClip:
