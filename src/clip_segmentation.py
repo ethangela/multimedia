@@ -19,7 +19,7 @@ UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"]
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
 
-logging.basicConfig(filename='clip_segmentation.log',level=logging.DEBUG)
+logging.basicConfig(filename='clip_segmentation.log',level=logging.INFO)
 
 segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()

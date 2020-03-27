@@ -1,3 +1,4 @@
 data/chatette/output/*
 *.python-version
 *__pycache__*
+*.log
