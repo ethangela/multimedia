@@ -9,6 +9,7 @@ import os
 import multiprocessing
 import numpy as np
 import pandas as pd
+from commons.executions import multiple_executions_wrapper
 from editing.segmentation import VideoSegmentation
 from editing.writer import DatasetWriter
 from functools import partial
@@ -49,44 +50,37 @@ def get_segment_bounds(duration:int, start: int, end: int) -> (int, int):
 	assert segment_end - segment_start == CLIP_DURATION
 	return (segment_start, segment_end)
 
+@multiple_executions_wrapper
 def extract_segment_ground_truth(row) -> np.ndarray:
 	"""
 	For safety, only evaluate ground truth if video's duration is as long or longer than CLIP_DURATION
 	"""
-	try:
-		video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-		segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
+	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
-		(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
-																							end_time=row["segment_time_end"])
-		(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
-																							end_time=row["end"])
+	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
+																						end_time=row["segment_time_end"])
+	(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
+																						end_time=row["end"])
 
-		encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
-													truth_frames=(key_segment_frames_start, key_segement_frames_end))
-		del video.reader
-		del video
-		return encoded_arr
-	except Exception as ex:
-		logging.error("PID: {0} Exception for file: {1}".format(os.getpid(), row["full_video_path"]))
-		logging.error(ex)
-		raise ex
+	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
+												truth_frames=(key_segment_frames_start, key_segement_frames_end))
+	del video.reader
+	del video
+	return encoded_arr
 
+@multiple_executions_wrapper
 def extract_segment_timings(row) -> pd.Series:
-	try:
-		key_segment_time_start 	= row["start"]
-		key_segment_time_end 	= row["end"]
-		video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-		video_duration 			= video.duration
-		(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
-		del video.reader
-		del video
-		return pd.Series([segment_time_start, segment_time_end])
-	except Exception as ex:
-		logging.error("PID: {0} Exception for file: {1}".format(os.getpid(), row["full_video_path"]))
-		logging.error(ex)
-		raise ex
+	key_segment_time_start 	= row["start"]
+	key_segment_time_end 	= row["end"]
+	video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+	video_duration 			= video.duration
+	(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
+	del video.reader
+	del video
+	return pd.Series([segment_time_start, segment_time_end])
 
+@multiple_executions_wrapper
 def extract_segment_path(row) -> str:
 	class_name 			= row["classname"].strip().replace(" ", "_")	
 	segment_video_path 	= os.path.join(SEGMENTED_CLIPS_ROOT, class_name, row["unique_clip_name"])
