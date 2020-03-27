@@ -19,7 +19,7 @@ UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"]
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
 
-logging.basicConfig(filename='clip_segmentation.log',level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()
@@ -58,6 +58,8 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 
 		encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
 													truth_frames=(key_segment_frames_start, key_segement_frames_end))
+	else:
+		logging.warning("Ignoring ground_truth computation for video duration {0} < {1}s".format(video.duration, CLIP_DURATION))
 	return encoded_arr
 
 def extract_segment_timings(row) -> pd.Series:
