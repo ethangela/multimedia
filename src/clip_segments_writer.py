@@ -18,17 +18,17 @@ segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()
 
 @multiple_executions_wrapper
-def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
-	for _, row in segment_metadata_df.iterrows():
-		full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
-		clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
-		data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
-		logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
+def write_segment_clip(row) -> None:
+	full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
+	clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
+	data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
+	logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
 
 def exec_write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
 	try:
-		write_segment_clip(segment_metadata_df = segment_metadata_df)
+		for _, row in segment_metadata_df.iterrows():
+			write_segment_clip(row)
 	except Exception as ex:
 		logging.error("PID {0} - Ignoring failed writes to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
