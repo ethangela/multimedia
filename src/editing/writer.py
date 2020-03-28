@@ -17,5 +17,5 @@ class DatasetWriter(object):
 
 	def writeCsv(self, df: pd.DataFrame, location: str) -> None:
 		self._createParents(path = location)
-		df.to_csv(location, sep=",", header=True)
+		df.to_csv(location, sep=",", header=True, index=False)
 		return
