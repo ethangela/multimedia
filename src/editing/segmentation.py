@@ -23,10 +23,10 @@ class VideoSegmentation(object):
 		"""
 		(clip_frames_start, clip_frames_end) = clip_frames
 		(truth_frames_start, truth_frames_end) = truth_frames
-		assert clip_frames_start <= truth_frames_start <= truth_frames_end <= clip_frames_end, "clip_frames: {0}, truth_frames: {1}".format(clip_frames, truth_frames)
-
 		arr = np.zeros(clip_frames_end -clip_frames_start +1, dtype=int)
-		arr[truth_frames_start -clip_frames_start : truth_frames_end -clip_frames_start +1] = 1
+		# assert clip_frames_start <= truth_frames_start <= truth_frames_end <= clip_frames_end, "clip_frames: {0}, truth_frames: {1}".format(clip_frames, truth_frames)
+		if clip_frames_start <= truth_frames_start <= truth_frames_end <= clip_frames_end:
+			arr[truth_frames_start -clip_frames_start : truth_frames_end -clip_frames_start +1] = 1
 		return arr
 
 	def getFrameIndex(self, video_duration: float, video_fps: float, start_time: int, end_time: int) -> (int, int):
