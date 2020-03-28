@@ -4,20 +4,26 @@ Script to identify relevant portions in a video clip, crop out the video and wri
 
 import copy
 import logging
+import numpy as np
 import os
+import multiprocessing
 import pandas as pd
 from commons.executions import multiple_executions_wrapper
 from editing.segmentation import VideoSegmentation
+from editing.writer import DatasetWriter
 from tqdm import tqdm
 
-RESOURCE_FILE 		= os.environ["RESOURCE_FILE"] 	# CSV file
-UNEDITED_CLIPS_ROOT = os.environ["CLIPS_ROOT"] 		# To raw video files
-VIDEO_METADATA_PATH = os.environ["METADATA_PATH"]
+MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
+RESOURCE_FILE 			= os.environ["RESOURCE_FILE"] 	# CSV file
+UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		# To raw video files
+VIDEO_METADATA_ROOT 	= os.environ["METADATA_ROOT"]
+VIDEO_METADATA_PATH 	= os.environ.get("METADATA_PATH", "_metadata")
 
 logging.basicConfig(level=logging.INFO)
 tqdm.pandas()
 
-segmenter_obj 		= VideoSegmentation()
+segmenter_obj 	= VideoSegmentation()
+data_writer 	= DatasetWriter()
 
 def build_video_df(video_root: str) -> pd.DataFrame:
 	"""
@@ -39,6 +45,7 @@ def build_video_df(video_root: str) -> pd.DataFrame:
 
 	return pd.DataFrame(video_data, columns=["full_video_path", "youtube_id"])
 
+@multiple_executions_wrapper
 def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -> pd.DataFrame:
 	"""
 	Only video IDs present in video_df will be kept
@@ -51,8 +58,8 @@ def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -
 	merged_df["unique_clip_name"] = merged_df.progress_apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
 	return merged_df.drop(["subset", "label", "_vid_indx"], axis=1)
 
-def inject_video_duration(full_video_path: str) -> int:
-	full_video 	= segmenter_obj.readAsVideo(video_path = full_video_path)
+def inject_video_duration(row) -> int:
+	full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
 	return full_video.duration
 
 @multiple_executions_wrapper
@@ -62,7 +69,7 @@ def with_video_duration_df(video_df: pd.DataFrame) -> pd.DataFrame:
 	Cols: full_video_path | youtube_id | unique_clip_name | classname | start | end | full_video_duration
 	"""
 	logging.info("PID {0}: Extracting full video duration".format(os.getpid()))
-	_video_df = copy.copy(_video_df)
+	_video_df = copy.copy(video_df)
 	_video_df["full_video_duration"] = _video_df.progress_apply(lambda row: inject_video_duration(row), axis =1)
 	return _video_df
 
@@ -72,11 +79,19 @@ def filter_invalid_clips(video_df: pd.DataFrame) -> pd.DataFrame:
 	Removes clip from the DF if start / end time is beyond duration
 	"""
 	logging.info("PID {0}: Filtering invalid clips".format(os.getpid()))
-	_video_df = copy.copy(_video_df)
+	_video_df = copy.copy(video_df)
 	return _video_df[ (_video_df["start"] <= _video_df["full_video_duration"]) & (_video_df["end"] <= _video_df["full_video_duration"]) ]
 
+def exec_segment_metadata(metadata_df: pd.DataFrame) -> None:
+	video_df 					= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
+	video_merged_df 			= merge_video_metadata(video_df = video_df, video_metadata = video_metadata_df)
+	video_merged_w_duration_df 	= with_video_duration_df(video_df = video_merged_df)
+	final_df 					= filter_invalid_clips(video_df = video_merged_w_duration_df)
+	metadata_file 				= os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH, "{0}_metadata.csv".format(os.getpid()))
+	data_writer.writeCsv(df = final_df, location = metadata_file)
+
 if __name__ == "__main__":
-	video_metadata_df 	= pd.read_csv(RESOURCE_FILE)
-	video_df 			= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
-	video_merged_df 	= merge_video_metadata(video_df = video_df, video_metadata = video_metadata_df)
-	video_merged_df.to_csv(VIDEO_METADATA_PATH)
+	video_metadata_df 			= pd.read_csv(RESOURCE_FILE)
+	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
+	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
+		pool.map(exec_segment_metadata, video_metadata_df_splits)
