@@ -95,7 +95,7 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 																	"segment_time_start", "segment_time_end", "ground_truth"])])
 
 	_metadata_df[["full_video_duration", "full_video_fps"]] = _metadata_df.progress_apply(lambda row: extract_video_specs(row), axis=1)
-	logging.info("PID: {0} Segment timing extraction completed".format(os.getpid()))
+	logging.info("PID: {0} Segment video specs extraction completed".format(os.getpid()))
 
 	_metadata_df["segmented_clips_path"] = _metadata_df.progress_apply(lambda row: extract_segment_path(row), axis=1)
 	logging.info("PID: {0} Segment path extraction completed".format(os.getpid()))
