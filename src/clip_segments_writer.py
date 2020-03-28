@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 import numpy as np
 import pandas as pd
+from commons.executions import multiple_executions_wrapper
 from editing.segmentation import VideoSegmentation
 from editing.writer import DatasetWriter
 
@@ -16,20 +17,20 @@ logging.basicConfig(level=logging.INFO)
 segmenter_obj 	= VideoSegmentation()
 data_writer 	= DatasetWriter()
 
+@multiple_executions_wrapper
 def write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
 	for _, row in segment_metadata_df.iterrows():
-		try:
-			full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
-			clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
-			data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
-			logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
-		except Exception as ex:
-			logging.error("PID {0} - Failed to write to {1}".format(os.getpid(), row["segmented_clips_path"]))
-			logging.warning("File ignored with exception: {0}".format(ex))
+		full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
+		clip 		= segmenter_obj.segment(video = full_video, start_time = row["segment_time_start"], end_time = row["segment_time_end"])
+		data_writer.writeVideo(clip = clip, location = row["segmented_clips_path"])
+		logging.info("PID {0} - Write to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
 
 def exec_write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
-	write_segment_clip(segment_metadata_df = segment_metadata_df)
+	try:
+		write_segment_clip(segment_metadata_df = segment_metadata_df)
+	except Exception as ex:
+		logging.error("PID {0} - Ignoring failed writes to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
 
 if __name__ == "__main__":
