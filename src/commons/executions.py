@@ -6,7 +6,7 @@ import time
 logging.basicConfig(level=logging.INFO)
 
 # TODO: No hardcoding please ...
-_ITERATIONS 	= 10
+_ITERATIONS 	= 5
 _DELAY 			= 2
 
 def multiple_executions_wrapper(fnct):
