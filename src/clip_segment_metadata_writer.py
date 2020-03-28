@@ -21,7 +21,8 @@ CLIP_ADDITIONAL_WIDTH 	= int(os.environ.get("CLIP_ADDITIONAL_WIDTH", 1))
 UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_splits")
-VIDEO_METADATA_PATH 	= os.environ["METADATA_PATH"]
+VIDEO_METADATA_ROOT 	= os.environ["METADATA_ROOT"]
+VIDEO_METADATA_PATH 	= os.environ.get("METADATA_PATH", "_metadata")
 
 logging.basicConfig(level=logging.INFO)
 tqdm.pandas()
@@ -40,9 +41,8 @@ def get_segment_bounds(duration:int, start: int, end: int) -> (int, int):
 	return (segment_start, segment_end)
 
 @multiple_executions_wrapper
-def extract_segment_ground_truth(row) -> np.ndarray:
+def extract_segment_ground_truth(row) -> [int]:
 	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-	segment_clip 	= segmenter_obj.segment(video=video, start_time=row["segment_time_start"], end_time=row["segment_time_end"])
 
 	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
 																						end_time=row["segment_time_end"])
@@ -51,19 +51,17 @@ def extract_segment_ground_truth(row) -> np.ndarray:
 
 	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
 												truth_frames=(key_segment_frames_start, key_segement_frames_end))
+
 	del video.reader
 	del video
-	return encoded_arr
+	return encoded_arr.tolist()
 
 @multiple_executions_wrapper
 def extract_segment_timings(row) -> pd.Series:
 	key_segment_time_start 	= row["start"]
 	key_segment_time_end 	= row["end"]
-	video 					= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
-	video_duration 			= video.duration
+	video_duration 			= row["full_video_duration"]
 	(segment_time_start, segment_time_end) = get_segment_bounds(duration=video_duration, start=key_segment_time_start, end=key_segment_time_end)
-	del video.reader
-	del video
 	return pd.Series([segment_time_start, segment_time_end])
 
 @multiple_executions_wrapper
@@ -108,8 +106,11 @@ if __name__ == "__main__":
 	for prior_files in prior_segment_metadata_files:
 		os.remove(prior_files)
 
+	# Read all metadata outputs as DF
+	segment_metadata_files 		= glob.glob(os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH) + "/*_metadata.csv")
+	video_metadata_df 			= pd.concat(map(pd.read_csv, segment_metadata_files))
+
 	# Write split files to SEGMENTED_CLIPS_PATH
-	video_metadata_df 			= pd.read_csv(VIDEO_METADATA_PATH)
 	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
 		pool.map(exec_segment_clip_metadata, video_metadata_df_splits)
