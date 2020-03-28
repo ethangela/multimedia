@@ -29,7 +29,7 @@ class VideoSegmentation(object):
 		arr[truth_frames_start -clip_frames_start : truth_frames_end -clip_frames_start +1] = 1
 		return arr
 
-	def getFrameIndex(self, video: moviepy.video.io.VideoFileClip.VideoFileClip, start_time: int, end_time: int) -> (int, int):
+	def getFrameIndex(self, video_duration: float, video_fps: float, start_time: int, end_time: int) -> (int, int):
 		"""
 		Gets frame positioning for key frames of interest relative to the start of the video
 
@@ -41,9 +41,9 @@ class VideoSegmentation(object):
 		Returns:
 		(int, int) - (start_frame_index, end_frame_index)
 		"""
-		total_frames 	= int(video.fps * video.duration)
-		tmp_start_indx 	= int((start_time / video.duration) * total_frames)
-		tmp_end_indx 	= int((end_time / video.duration) * total_frames)
+		total_frames 	= int(video_fps * video_duration)
+		tmp_start_indx 	= int((start_time / video_duration) * total_frames)
+		tmp_end_indx 	= int((end_time / video_duration) * total_frames)
 		start_index 	= min(max(0, tmp_start_indx), total_frames)
 		end_index 		= min(max(0, tmp_end_indx), total_frames)
 		return (start_index, end_index)

@@ -41,19 +41,32 @@ def get_segment_bounds(duration:int, start: int, end: int) -> (int, int):
 	return (segment_start, segment_end)
 
 @multiple_executions_wrapper
-def extract_segment_ground_truth(row) -> [int]:
-	video 			= segmenter_obj.readAsVideo(video_path=row["full_video_path"])
+def extract_video_specs(row) -> pd.Series:
+	"""
+	Extracts out video durations and FPS
 
-	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(video=video, start_time=row["segment_time_start"], 
+	*Note: Reading the video file is a costly operation due to network IO. Hence, it is recommended
+	that all needed data pertain to the video should be done here only.
+	"""
+	full_video 		= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
+	video_duration 	= full_video.duration
+	video_fps 		= full_video.fps
+	return pd.Series([video_duration, video_fps])
+
+@multiple_executions_wrapper
+def extract_segment_ground_truth(row) -> [int]:
+	(segment_frames_start, segment_frames_end) 			= segmenter_obj.getFrameIndex(	video_duration=row["full_video_duration"], 
+																						video_fps=row["full_video_fps"], 
+																						start_time=row["segment_time_start"], 
 																						end_time=row["segment_time_end"])
-	(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(video=video, start_time=row["start"], 
+
+	(key_segment_frames_start, key_segement_frames_end) = segmenter_obj.getFrameIndex(	video_duration=row["full_video_duration"], 
+																						video_fps=row["full_video_fps"],
+																						start_time=row["start"], 
 																						end_time=row["end"])
 
 	encoded_arr 	= segmenter_obj.encodeToArr(clip_frames=(segment_frames_start, segment_frames_end), 
 												truth_frames=(key_segment_frames_start, key_segement_frames_end))
-
-	del video.reader
-	del video
 	return encoded_arr.tolist()
 
 @multiple_executions_wrapper
@@ -76,7 +89,11 @@ def get_segemnt_clip_metadata(metadata_df: pd.DataFrame) -> pd.DataFrame:
 	When writing, directory structure after UNEDITED_CLIPS_ROOT is preserved
 	"""	
 	_metadata_df = copy.copy(metadata_df)
-	_metadata_df = pd.concat([_metadata_df, pd.DataFrame(columns=["segmented_clips_path", "segment_time_start", "segment_time_end", "ground_truth"])])
+	_metadata_df = pd.concat([_metadata_df, pd.DataFrame(columns=[ 	"full_video_duration", "full_video_fps", "segmented_clips_path", 
+																	"segment_time_start", "segment_time_end", "ground_truth"])])
+
+	_metadata_df[["full_video_duration", "full_video_fps"]] = _metadata_df.progress_apply(lambda row: extract_video_specs(row), axis=1)
+	logging.info("PID: {0} Segment timing extraction completed".format(os.getpid()))
 
 	_metadata_df["segmented_clips_path"] = _metadata_df.progress_apply(lambda row: extract_segment_path(row), axis=1)
 	logging.info("PID: {0} Segment path extraction completed".format(os.getpid()))

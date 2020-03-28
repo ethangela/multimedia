@@ -62,31 +62,6 @@ def inject_unique_clip_name(video_df: pd.DataFrame) -> pd.DataFrame:
 	video_df["unique_clip_name"] = video_df.progress_apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
 	return video_df.drop(["subset", "label", "_vid_indx"], axis=1)
 
-@multiple_executions_wrapper
-def inject_video_duration(row) -> int:
-	full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
-	return full_video.duration
-
-@multiple_executions_wrapper
-def with_video_duration_df(video_df: pd.DataFrame) -> pd.DataFrame:
-	"""
-	New columns would be 
-	Cols: full_video_path | youtube_id | unique_clip_name | classname | start | end | full_video_duration
-	"""
-	logging.info("PID {0}: Extracting full video duration".format(os.getpid()))
-	_video_df = copy.copy(video_df)
-	_video_df["full_video_duration"] = _video_df.progress_apply(lambda row: inject_video_duration(row), axis =1)
-	return _video_df
-
-@multiple_executions_wrapper
-def filter_invalid_clips(video_df: pd.DataFrame) -> pd.DataFrame:
-	"""
-	Removes clip from the DF if start / end time is beyond duration
-	"""
-	logging.info("PID {0}: Filtering invalid clips".format(os.getpid()))
-	_video_df = copy.copy(video_df)
-	return _video_df[ (_video_df["start"] <= _video_df["full_video_duration"]) & (_video_df["end"] <= _video_df["full_video_duration"]) ]
-
 def exec_segment_metadata(metadata_df: pd.DataFrame) -> None:
 	video_df 		= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
 	video_merged_df = merge_video_metadata(video_df = video_df, video_metadata = metadata_df)
@@ -94,10 +69,8 @@ def exec_segment_metadata(metadata_df: pd.DataFrame) -> None:
 		logging.info("PID {0}: Video merged DF is empty".format(os.getpid()))
 	else:
 		unique_clip_df 				= inject_unique_clip_name(video_df = video_merged_df)
-		video_merged_w_duration_df 	= with_video_duration_df(video_df = unique_clip_df)
-		final_df 					= filter_invalid_clips(video_df = video_merged_w_duration_df)
 		metadata_file 				= os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH, "{0}_metadata.csv".format(os.getpid()))
-		data_writer.writeCsv(df = final_df, location = metadata_file)
+		data_writer.writeCsv(df = unique_clip_df, location = metadata_file)
 	return
 
 if __name__ == "__main__":
