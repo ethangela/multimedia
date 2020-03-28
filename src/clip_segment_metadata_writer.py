@@ -51,6 +51,8 @@ def extract_video_specs(row) -> pd.Series:
 	full_video 		= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
 	video_duration 	= full_video.duration
 	video_fps 		= full_video.fps
+	del full_video.reader
+	del full_video
 	return pd.Series([video_duration, video_fps])
 
 @multiple_executions_wrapper
