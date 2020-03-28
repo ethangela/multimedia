@@ -19,10 +19,10 @@ def multiple_executions_wrapper(fnct):
 			except Exception as ex:
 				time.sleep(_DELAY)
 				_ex = ex
-				logging.warning("PID: {0} Exception occured: ".format(os.getpid(), ex))
+				logging.warning("PID: {0} Exception occured: {1}".format(os.getpid(), ex))
 				logging.warning("PID: {0} attempting retry".format(os.getpid()))
 		
 		if _ex is not None:
-			logging.error("PID: {0} terminating with exception: ".format(os.getpid(), _ex))
+			logging.error("PID: {0} terminating with exception: {1}".format(os.getpid(), _ex))
 			raise _ex
 	return inner

@@ -3,6 +3,7 @@ Script to identify relevant portions in a video clip, crop out the video and wri
 """
 
 import copy
+import glob
 import logging
 import numpy as np
 import os
@@ -54,10 +55,14 @@ def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -
 	Cols: full_video_path | youtube_id | unique_clip_name | classname | start | end
 	"""
 	merged_df = pd.merge(video_df, video_metadata, how="inner", on="youtube_id")
-	merged_df["_vid_indx"] = merged_df.groupby("youtube_id").cumcount()
-	merged_df["unique_clip_name"] = merged_df.progress_apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
-	return merged_df.drop(["subset", "label", "_vid_indx"], axis=1)
+	return merged_df
 
+def inject_unique_clip_name(video_df: pd.DataFrame) -> pd.DataFrame:
+	video_df["_vid_indx"] = video_df.groupby("youtube_id").cumcount()
+	video_df["unique_clip_name"] = video_df.progress_apply(lambda row: "{0}_{1}.mp4".format(row["youtube_id"], row["_vid_indx"]), axis=1)
+	return video_df.drop(["subset", "label", "_vid_indx"], axis=1)
+
+@multiple_executions_wrapper
 def inject_video_duration(row) -> int:
 	full_video 	= segmenter_obj.readAsVideo(video_path = row["full_video_path"])
 	return full_video.duration
@@ -83,14 +88,25 @@ def filter_invalid_clips(video_df: pd.DataFrame) -> pd.DataFrame:
 	return _video_df[ (_video_df["start"] <= _video_df["full_video_duration"]) & (_video_df["end"] <= _video_df["full_video_duration"]) ]
 
 def exec_segment_metadata(metadata_df: pd.DataFrame) -> None:
-	video_df 					= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
-	video_merged_df 			= merge_video_metadata(video_df = video_df, video_metadata = video_metadata_df)
-	video_merged_w_duration_df 	= with_video_duration_df(video_df = video_merged_df)
-	final_df 					= filter_invalid_clips(video_df = video_merged_w_duration_df)
-	metadata_file 				= os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH, "{0}_metadata.csv".format(os.getpid()))
-	data_writer.writeCsv(df = final_df, location = metadata_file)
+	video_df 		= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
+	video_merged_df = merge_video_metadata(video_df = video_df, video_metadata = metadata_df)
+	if video_merged_df.empty:
+		logging.info("PID {0}: Video merged DF is empty".format(os.getpid()))
+	else:
+		unique_clip_df 				= inject_unique_clip_name(video_df = video_merged_df)
+		video_merged_w_duration_df 	= with_video_duration_df(video_df = unique_clip_df)
+		final_df 					= filter_invalid_clips(video_df = video_merged_w_duration_df)
+		metadata_file 				= os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH, "{0}_metadata.csv".format(os.getpid()))
+		data_writer.writeCsv(df = final_df, location = metadata_file)
+	return
 
 if __name__ == "__main__":
+	# Delete all files within VIDEO_METADATA_PATH directory for idempotency
+	prior_segment_metadata_files = glob.glob(os.path.join(VIDEO_METADATA_ROOT, VIDEO_METADATA_PATH) + "/*_metadata.csv")
+	logging.warning("Deleting prior files: {0}".format(prior_segment_metadata_files))
+	for prior_files in prior_segment_metadata_files:
+		os.remove(prior_files)
+
 	video_metadata_df 			= pd.read_csv(RESOURCE_FILE)
 	video_metadata_df_splits 	= np.array_split(video_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
