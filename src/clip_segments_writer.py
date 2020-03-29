@@ -26,11 +26,11 @@ def write_segment_clip(row) -> None:
 	return
 
 def exec_write_segment_clip(segment_metadata_df: pd.DataFrame) -> None:
-	try:
-		for _, row in segment_metadata_df.iterrows():
+	for _, row in segment_metadata_df.iterrows():
+		try:
 			write_segment_clip(row)
-	except Exception as ex:
-		logging.error("PID {0} - Ignoring failed writes to {1}".format(os.getpid(), row["segmented_clips_path"]))
+		except Exception as ex:
+			logging.error("PID {0} - Ignoring failed writes to {1}".format(os.getpid(), row["segmented_clips_path"]))
 	return
 
 if __name__ == "__main__":
