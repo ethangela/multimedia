@@ -19,10 +19,10 @@ from tqdm import tqdm
 MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
 CLIP_ADDITIONAL_WIDTH 	= int(os.environ.get("CLIP_ADDITIONAL_WIDTH", 1))
 UNEDITED_CLIPS_ROOT 	= os.environ["CLIPS_ROOT"] 		
-SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
-SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_splits")
 VIDEO_METADATA_ROOT 	= os.environ["METADATA_ROOT"]
 VIDEO_METADATA_PATH 	= os.environ.get("METADATA_PATH", "_metadata")
+SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
+SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_splits")
 
 logging.basicConfig(level=logging.INFO)
 tqdm.pandas()

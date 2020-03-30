@@ -1,5 +1,5 @@
 // This template defines different ways to ask for the location of toilets (Chatette version)
-%[horse riding](50)
+%[Horseback riding](50)
 	[the] ~[person] is ~[riding] ~[on] [the] ~[horse]
 	~[horseback] riding ~[activity]
 	~[riding] [a|an] ~[horse]

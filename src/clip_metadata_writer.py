@@ -47,14 +47,19 @@ def build_video_df(video_root: str) -> pd.DataFrame:
 	return pd.DataFrame(video_data, columns=["full_video_path", "youtube_id"])
 
 @multiple_executions_wrapper
-def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame) -> pd.DataFrame:
+def merge_video_metadata(video_df: pd.DataFrame, video_metadata: pd.DataFrame, how: str, left_on: str, right_on: str) -> pd.DataFrame:
 	"""
 	Only video IDs present in video_df will be kept
 	Other information will be discarded
 
 	Cols: full_video_path | youtube_id | unique_clip_name | classname | start | end
 	"""
-	merged_df = pd.merge(video_df, video_metadata, how="inner", on="youtube_id")
+	merged_df = pd.merge(video_df, 
+						 video_metadata, 
+						 how=how, 
+						 left_on=left_on,
+						 right_on=right_on
+						 )
 	return merged_df
 
 def inject_unique_clip_name(video_df: pd.DataFrame) -> pd.DataFrame:
@@ -64,7 +69,8 @@ def inject_unique_clip_name(video_df: pd.DataFrame) -> pd.DataFrame:
 
 def exec_segment_metadata(metadata_df: pd.DataFrame) -> None:
 	video_df 		= build_video_df(video_root = UNEDITED_CLIPS_ROOT)
-	video_merged_df = merge_video_metadata(video_df = video_df, video_metadata = metadata_df)
+	video_merged_df = merge_video_metadata(	video_df = video_df, video_metadata = metadata_df,
+											how="inner", left_on="youtube_id", right_on="youtube_id")
 	if video_merged_df.empty:
 		logging.info("PID {0}: Video merged DF is empty".format(os.getpid()))
 	else:
