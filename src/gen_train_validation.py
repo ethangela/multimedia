@@ -35,7 +35,7 @@ def build_video_df(video_root: str) -> pd.DataFrame:
 				video_realpath = os.path.join(directory, each_file)
 				video_data.append((video_realpath, video_id))
 
-	return pd.DataFrame(video_data, columns=["full_video_path", "youtube_id"])
+	return pd.DataFrame(video_data, columns=["segmented_video_path", "segmented_video_id"])
 
 def extract_chatette_df(chatette_json: str) -> pd.DataFrame:
 	with open(chatette_json, "r") as f:
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 	chatette_df 				= extract_chatette_df(chatette_json = CHATETTE_JSON_PATH)
 
 	video_merged_df 			= pd.merge(	left = segmented_video_df, right = segment_metadata_df,
-											how = "inner", left_on = "youtube_id", right_on = "unique_clip_name")
+											how = "inner", left_on = "segmented_video_id", right_on = "unique_clip_name")
 
 	chatette_video_merged_df 	= pd.merge(	left = video_merged_df, right = chatette_df,
 											how = "inner", left_on = "classname", right_on = "intent")
