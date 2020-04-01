@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import cv2
+import logging
 import numpy as np
 import os
 from commons.executions import multiple_executions_wrapper
@@ -7,6 +8,8 @@ from commons.executions import multiple_executions_wrapper
 SEGMENTED_CLIPS_ROOT    = os.environ["SEGMENTED_CLIPS_ROOT"]
 IMAGE_ROOT              = os.environ["IMAGE_ROOT"]
 SAMPLE_FPS              = int(os.environ.get("SAMPLE_FPS", -1))
+
+logging.basicConfig(level=logging.INFO)
 
 @multiple_executions_wrapper
 def video2frame_at2FPS(name):
@@ -56,5 +59,8 @@ if __name__ == '__main__':
     for directory, sub_dir, files in os.walk(SEGMENTED_CLIPS_ROOT):
         for each_file in files:
             if ".MP4" in each_file.upper():
-                video_path = os.path.join(directory, each_file)
-                video2frame_at2FPS(name = video_path)
+                try:
+                    video_path = os.path.join(directory, each_file)
+                    video2frame_at2FPS(name = video_path)
+                except Exception as ex:
+                    logging.warning("Extraction failed for {0}. Skipping.".format(video_path))
