@@ -2,11 +2,13 @@
 import cv2
 import numpy as np
 import os
+from commons.executions import multiple_executions_wrapper
 
 SEGMENTED_CLIPS_ROOT    = os.environ["SEGMENTED_CLIPS_ROOT"]
 IMAGE_ROOT              = os.environ["IMAGE_ROOT"]
 SAMPLE_FPS              = int(os.environ.get("SAMPLE_FPS", -1))
 
+@multiple_executions_wrapper
 def video2frame_at2FPS(name):
     cap = cv2.VideoCapture(name)
     fps = cap.get(cv2.CAP_PROP_FPS)
