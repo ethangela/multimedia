@@ -19,3 +19,8 @@ class DatasetWriter(object):
 		self._createParents(path = location)
 		df.to_csv(location, sep=",", header=True, index=False)
 		return
+
+	def writeJsonL(self, df: pd.DataFrame, location: str) -> None:
+		self._createParents(path = location)
+		df.to_json(location, orient = "records", lines = True)
+		return
