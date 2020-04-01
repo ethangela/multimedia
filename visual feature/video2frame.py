@@ -32,7 +32,7 @@ def video2frame_at2FPS(name):
     cv2.destroyAllWindows()
     
 if __name__ == '__main__':
-    base_dir = 'C:/Users/User/Desktop/project/videos'
+    base_dir = './videos'
     v_list = os.listdir(base_dir)
     for item in v_list:
         video2frame_at2FPS(item)
