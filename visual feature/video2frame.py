@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 def video2frame_at2FPS(name):
-    add = 'C:/Users/User/Desktop/project/videos/' + name
+    add = './videos/' + name
     cap = cv2.VideoCapture(add)
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
