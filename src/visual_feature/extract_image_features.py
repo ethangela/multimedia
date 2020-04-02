@@ -133,10 +133,6 @@ def get_image_paths(dir_path, image_extension=".jpg"):
     """each dir contains the same number of flow_x_{:05d}.jpg, flow_y_{:05d}.jpg, img_{:05d}.jpg.
     Index starts at 1, not 0, thus there is no img_00000.jpg, etc.
     """
-    # num_rgb_images = int(len(os.listdir(dir_path))) 
-    # offsets_per_second = np.arange(0, num_rgb_images)
-    # selected_img_indices = offsets_per_second
-    # return [image_filename_pattern.format(e) for e in selected_img_indices]
     images = []
     for _, _, files in os.walk(dir_path):
         for each_file in files:
