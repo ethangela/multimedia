@@ -53,8 +53,8 @@ if __name__ == "__main__":
 	data_writer.writeJsonL(df = train_tvr_df, location = train_file_path)
 
 	# For validation dataset
-	validation_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, TRAIN_VAL_PATH) + "/*validation.jsonl")
+	validation_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, TRAIN_VAL_PATH) + "/*validation.csv")
 	validation_df 			= pd.concat(map(pd.read_csv, validation_files))
 	validation_tvr_df 		= convert_to_tvr_query(df = validation_df, data_type = "v")
-	validation_file_path 	= os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_validation.csv")
+	validation_file_path 	= os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_validation.jsonl")
 	data_writer.writeJsonL(df = validation_tvr_df, location = validation_file_path)
