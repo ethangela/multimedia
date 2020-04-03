@@ -12,6 +12,7 @@ import glob
 import json
 import logging
 import os
+import numpy as np
 import pandas as pd 
 from editing.writer import DatasetWriter
 from typing import Dict
@@ -36,10 +37,11 @@ def convert_to_tvr_query(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 
 	assigned_constants = {	"duration" 	: 4, 
 							"ts" 		: "[0, 4]", 
-							"type" 		: data_type, 
-							"desc_id" 	: 1}
+							"type" 		: data_type
+						}
 
 	tvr_filter_relevant_columns_df 	= tvr_filter_relevant_columns_df.assign(**assigned_constants)
+	tvr_filter_relevant_columns_df["desc_id"] = np.arange(len(tvr_df))
 	return tvr_filter_relevant_columns_df
 
 if __name__ == "__main__":
