@@ -36,11 +36,11 @@ def convert_to_tvr_query(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 													 									"text" : "desc"})
 
 	assigned_constants = {	"duration" 	: 4, 
-							"ts" 		: [[0, 4]], 
 							"type" 		: data_type
 						}
 
 	tvr_filter_relevant_columns_df 	= tvr_filter_relevant_columns_df.assign(**assigned_constants)
+	tvr_filter_relevant_columns_df["ts"] = tvr_filter_relevant_columns_df.apply(lambda row: [0,4])  
 	tvr_filter_relevant_columns_df["desc_id"] = np.arange(len(tvr_df))
 	tvr_filter_relevant_columns_df["vid_name"] = tvr_filter_relevant_columns_df["vid_name"].str.replace(r'.mp4', '')
 	return tvr_filter_relevant_columns_df
