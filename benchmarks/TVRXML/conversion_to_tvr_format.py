@@ -42,7 +42,7 @@ def convert_to_tvr_query(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 	tvr_filter_relevant_columns_df 	= tvr_filter_relevant_columns_df.assign(**assigned_constants)
 	tvr_filter_relevant_columns_df["ts"] = [[0,4] for _ in tvr_filter_relevant_columns_df.index]
 	tvr_filter_relevant_columns_df["desc_id"] = np.arange(len(tvr_df))
-	tvr_filter_relevant_columns_df["vid_name"] = tvr_filter_relevant_columns_df["vid_name"].str.replace(r'.mp4', '')
+	tvr_filter_relevant_columns_df["vid_name"] = tvr_filter_relevant_columns_df["vid_name"].str.replace('.mp4', '')
 	return tvr_filter_relevant_columns_df
 
 if __name__ == "__main__":
