@@ -36,7 +36,7 @@ def convert_to_tvr_query(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 													 									"text" : "desc"})
 
 	assigned_constants = {	"duration" 	: 4, 
-							"ts" 		: [0, 4], 
+							"ts" 		: [[0, 4]], 
 							"type" 		: data_type
 						}
 
