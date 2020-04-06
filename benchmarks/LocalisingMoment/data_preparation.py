@@ -1,5 +1,6 @@
 import ast
 import h5py
+import logging
 import multiprocessing
 import numpy as np
 import os
@@ -18,6 +19,7 @@ SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_localizing_mome
 bert_embedding 	= BertEmbedding()
 data_writer 	= DatasetWriter()
 
+logging.basicConfig(level=logging.INFO)
 tqdm.pandas()
 
 def get_temporal_encoding(row) -> pd.Series:
@@ -93,6 +95,11 @@ def execute(segment_df: pd.DataFrame) -> None:
 	data_writer.writeCsv(df = df, location = output_file)
 
 if __name__ == "__main__":
+	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
+	logging.warning("Deleting prior files: {0}".format(prior_segment_metadata_files))
+	for prior_files in prior_segment_metadata_files:
+		os.remove(prior_files)
+
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
 	# execute(segment_df = segment_metadata_df)
 	segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
