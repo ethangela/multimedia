@@ -82,7 +82,7 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	df["global_enc"] 	= df.apply(lambda row: get_global_encoding(row), axis = 1)
 	df["local_enc"] 	= df.apply(lambda row: get_local_encoding(row), axis = 1)
 	df["language_enc"] 	= df.apply(lambda row: get_language_encoding(row), axis = 1)
- 	return df
+	return df
 
 def execute(features: pd.DataFrame, segment_df: pd.DataFrame) -> None:
 	df = data_preprocessing(features = features, segment_df = segment_df)
