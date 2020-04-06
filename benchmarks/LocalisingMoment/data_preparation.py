@@ -94,6 +94,7 @@ def execute(segment_df: pd.DataFrame) -> None:
 	df = data_preprocessing(features = image_features, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "{0}_lm_data.csv".format(os.getpid()))
 	data_writer.writeCsv(df = df, location = output_file)
+	image_features.close()
 
 if __name__ == "__main__":
 	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*lm_data.csv")
