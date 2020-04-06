@@ -88,12 +88,13 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	return df
 
 def execute(segment_df: pd.DataFrame) -> None:
+	print(segment_df)
 	df = data_preprocessing(features = IMAGE_FEATURES, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "data.csv")
 	data_writer.writeCsv(df = df, location = output_file)
 
 if __name__ == "__main__":
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
-	segment_metadata_df_splits 	= np.array_split(segment_metadata_df, MAX_THREAD_POOL)
+	segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
 		pool.map(execute, segment_metadata_df_splits)
