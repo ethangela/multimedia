@@ -14,7 +14,6 @@ SEGMENT_METADATA_CSV 	= os.environ["METADATA_CSV"]
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_localizing_moments_bm")
 
-IMAGE_FEATURES 	= read_features_file(path = FEATURES_FILE)
 bert_embedding 	= BertEmbedding()
 data_writer 	= DatasetWriter()
 
@@ -22,6 +21,8 @@ def read_features_file(path: str) -> h5py._hl.files.File:
 	with open(path, "r") as f:
 		features = f
 	return features
+
+IMAGE_FEATURES 	= read_features_file(path = FEATURES_FILE)
 
 def get_temporal_encoding(row) -> pd.Series:
 	"""
