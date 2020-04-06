@@ -96,4 +96,4 @@ if __name__ == "__main__":
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
 	segment_metadata_df_splits 	= np.array_split(segment_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-		pool.map(data_preprocessing, segment_metadata_df_splits)
+		pool.map(execute, segment_metadata_df_splits)
