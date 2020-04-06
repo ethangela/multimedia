@@ -29,10 +29,10 @@ def get_temporal_encoding(row) -> pd.Series:
 	(min_frames, max_frames) 		= (0, len(frame_labels))
 	(min_key_indx, max_key_indx) 	= (min(key_frame_indx), max(key_frame_indx))
 
-	return pd.Series([
+	return pd.Series([[
 						(min_key_indx - min_frames) / (max_frames - min_frames),
 						(max_key_indx - min_frames) / (max_frames - min_frames),
-					])
+					]])
 
 def get_global_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	"""
