@@ -92,11 +92,11 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 def execute(segment_df: pd.DataFrame) -> None:
 	image_features 	= h5py.File(FEATURES_FILE, "r")
 	df = data_preprocessing(features = image_features, segment_df = segment_df)
-	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "{0}_data.csv".format(os.getpid()))
+	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "{0}_lm_data.csv".format(os.getpid()))
 	data_writer.writeCsv(df = df, location = output_file)
 
 if __name__ == "__main__":
-	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*segment_metadata.csv")
+	prior_segment_metadata_files = glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH) + "/*lm_data.csv")
 	logging.warning("Deleting prior files: {0}".format(prior_segment_metadata_files))
 	for prior_files in prior_segment_metadata_files:
 		os.remove(prior_files)
