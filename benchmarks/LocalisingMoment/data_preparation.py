@@ -7,6 +7,7 @@ import pandas as pd
 from bert_embedding import BertEmbedding
 from editing.writer import DatasetWriter
 from functools import partial
+from tqdm import tqdm
 
 MAX_THREAD_POOL 		= int(os.environ.get("THREAD_POOL", multiprocessing.cpu_count()))
 FEATURES_FILE 			= os.environ["FEATURES_FILE"]
@@ -14,9 +15,10 @@ SEGMENT_METADATA_CSV 	= os.environ["METADATA_CSV"]
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_localizing_moments_bm")
 
-IMAGE_FEATURES 	= h5py.File(FEATURES_FILE, "r")
 bert_embedding 	= BertEmbedding()
 data_writer 	= DatasetWriter()
+
+tqdm.pandas()
 
 def get_temporal_encoding(row) -> pd.Series:
 	"""
@@ -78,20 +80,21 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	Paper: Localizing Moments in Video with Natural Language [Hendricks et al.]
 	"""
 	df = pd.DataFrame(columns = ["temporal_enc", "global_enc", "local_enc", "language_enc"])
-	df["temporal_enc"] 	= segment_df.apply(lambda row: get_temporal_encoding(row = row), axis = 1)
-	df["global_enc"] 	= segment_df.apply(lambda row: get_global_encoding(features = features, row = row), axis = 1)
-	df["local_enc"] 	= segment_df.apply(lambda row: get_local_encoding(features = features, row = row), axis = 1)
-	df["language_enc"] 	= segment_df.apply(lambda row: get_language_encoding(row = row), axis = 1)
+	df["temporal_enc"] 	= segment_df.progress_apply(lambda row: get_temporal_encoding(row = row), axis = 1)
+	df["global_enc"] 	= segment_df.progress_apply(lambda row: get_global_encoding(features = features, row = row), axis = 1)
+	df["local_enc"] 	= segment_df.progress_apply(lambda row: get_local_encoding(features = features, row = row), axis = 1)
+	df["language_enc"] 	= segment_df.progress_apply(lambda row: get_language_encoding(row = row), axis = 1)
 	return df
 
 def execute(segment_df: pd.DataFrame) -> None:
-	df = data_preprocessing(features = IMAGE_FEATURES, segment_df = segment_df)
+	image_features 	= h5py.File(FEATURES_FILE, "r")
+	df = data_preprocessing(features = image_features, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "data.csv")
 	data_writer.writeCsv(df = df, location = output_file)
 
 if __name__ == "__main__":
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
-	execute(segment_df = segment_metadata_df)
-	# segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
-	# with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-	# 	pool.map(execute, segment_metadata_df_splits)
+	# execute(segment_df = segment_metadata_df)
+	segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
+	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
+		pool.map(execute, segment_metadata_df_splits)
