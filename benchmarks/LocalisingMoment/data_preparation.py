@@ -88,7 +88,7 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	return df
 
 def execute(segment_df: pd.DataFrame) -> None:
-	df = data_preprocessing(features = features, segment_df = segment_df)
+	df = data_preprocessing(features = IMAGE_FEATURES, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "data.csv")
 	data_writer.writeCsv(df = df, location = output_file)
 
