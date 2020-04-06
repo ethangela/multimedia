@@ -14,6 +14,7 @@ SEGMENT_METADATA_CSV 	= os.environ["METADATA_CSV"]
 SEGMENTED_CLIPS_ROOT 	= os.environ["SEGMENTED_CLIPS_ROOT"] 	# Write out to root dir here
 SEGMENTED_CLIPS_PATH 	= os.environ.get("SEGMENTED_CLIPS_PATH", "_localizing_moments_bm")
 
+IMAGE_FEATURES 	= read_features_file(path = FEATURES_FILE)
 bert_embedding 	= BertEmbedding()
 data_writer 	= DatasetWriter()
 
@@ -85,15 +86,13 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	df["language_enc"] 	= df.apply(lambda row: get_language_encoding(row), axis = 1)
 	return df
 
-def execute(features: pd.DataFrame, segment_df: pd.DataFrame) -> None:
+def execute(segment_df: pd.DataFrame) -> None:
 	df = data_preprocessing(features = features, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "data.csv")
 	data_writer.writeCsv(df = df, location = output_file)
 
 if __name__ == "__main__":
-	features 			= read_features_file(path = FEATURES_FILE)
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
 	segment_metadata_df_splits 	= np.array_split(segment_metadata_df, MAX_THREAD_POOL)
 	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-		fnct = partial(execute, features = features)
-		pool.map(fnct, segment_metadata_df_splits)
+		pool.map(data_preprocessing, segment_metadata_df_splits)
