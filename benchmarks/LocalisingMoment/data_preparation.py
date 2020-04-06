@@ -68,8 +68,8 @@ def get_language_encoding(row) -> pd.Series:
 	sentence 			= row["text"]
 	sentence_tokens 	= bert_embedding([sentence])
 	embeddings 			= []
-	for each_sentence_token in sentence_tokens:
-		embeddings.append(each_sentence_token[1].tolist())
+	for each_sentence_token in sentence_tokens[0][1]:
+		embeddings.append(each_sentence_token.tolist())
 	return embeddings
 
 def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) -> pd.DataFrame:
