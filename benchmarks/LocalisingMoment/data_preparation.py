@@ -38,7 +38,7 @@ def get_global_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	"""
 	global encoding is the mean over all frame features
 	"""
-	video_name 		= row["segmented_video_id"].replace('\.mp4', '')
+	video_name 		= row["segmented_video_id"].replace('.mp4', '')
 	feat 			= np.array(features[video_name])
 	global_feat 	= np.mean(feat, axis = 1)
 	return pd.Series([global_feat])
@@ -47,7 +47,7 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	"""
 	local encoding is the mean over all key frames
 	"""
-	video_name 				= row["segmented_video_id"].replace('\.mp4', '')
+	video_name 				= row["segmented_video_id"].replace('.mp4', '')
 	feat 					= np.array(features[video_name])
 	(feat_row, feat_cols) 	= feat.shape
 	feat_cp 				= np.zeros((feat_row, feat_cols))
