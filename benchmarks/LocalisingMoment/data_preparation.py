@@ -74,12 +74,11 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	Processing of data done in accordance to 
 	Paper: Localizing Moments in Video with Natural Language [Hendricks et al.]
 	"""
-	print(list(features.keys())[0:10])
 	df = pd.DataFrame(columns = ["temporal_enc", "global_enc", "local_enc", "language_enc"])
-	df["temporal_enc"] 	= df.apply(lambda row: get_temporal_encoding(row), axis = 1)
-	df["global_enc"] 	= df.apply(lambda row: get_global_encoding(row), axis = 1)
-	df["local_enc"] 	= df.apply(lambda row: get_local_encoding(row), axis = 1)
-	df["language_enc"] 	= df.apply(lambda row: get_language_encoding(row), axis = 1)
+	df["temporal_enc"] 	= df.apply(lambda row: get_temporal_encoding(row = row), axis = 1)
+	df["global_enc"] 	= df.apply(lambda row: get_global_encoding(features = features, row = row), axis = 1)
+	df["local_enc"] 	= df.apply(lambda row: get_local_encoding(features = features, row = row), axis = 1)
+	df["language_enc"] 	= df.apply(lambda row: get_language_encoding(row = row), axis = 1)
 	return df
 
 def execute(segment_df: pd.DataFrame) -> None:
