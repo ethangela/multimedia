@@ -80,6 +80,7 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	Processing of data done in accordance to 
 	Paper: Localizing Moments in Video with Natural Language [Hendricks et al.]
 	"""
+	print(features)
 	df = pd.DataFrame(columns = ["temporal_enc", "global_enc", "local_enc", "language_enc"])
 	df["temporal_enc"] 	= df.apply(lambda row: get_temporal_encoding(row), axis = 1)
 	df["global_enc"] 	= df.apply(lambda row: get_global_encoding(row), axis = 1)
@@ -88,7 +89,6 @@ def data_preprocessing(features: h5py._hl.files.File, segment_df: pd.DataFrame) 
 	return df
 
 def execute(segment_df: pd.DataFrame) -> None:
-	print(segment_df)
 	df = data_preprocessing(features = IMAGE_FEATURES, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "data.csv")
 	data_writer.writeCsv(df = df, location = output_file)
