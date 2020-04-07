@@ -72,15 +72,15 @@ def get_model():
 	return model
 
 if __name__ == "__main__":
-	lm_net 	= get_model()
+	lm_net 		= get_model()
 
-	train_gen = data_generator(csv_dir = TRAINING_DATA_PATH)
+	train_gen 	= data_generator(csv_dir = TRAINING_DATA_PATH)
 
 	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
 	               loss = tf.keras.losses.mean_squared_error,
 	               metrics = [metrics.mean_squared_error])
 
-	callbacks = [
+	callbacks 	= [
 				    tf.keras.callbacks.ModelCheckpoint(
 				        filepath = os.path.join(CHECKPOINT_PATH, "lm_{epoch:02d}.hdf5"),
 				        save_best_only = True,
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 				        verbose = 1)
 				]
 
-	history = model.fit(x = train_gen,
+	history 	= lm_net.fit(x = train_gen,
 						verbose = 1,
 						epochs = 100,
 	                    callbacks = callbacks,
