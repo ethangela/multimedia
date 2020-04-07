@@ -77,7 +77,7 @@ if __name__ == "__main__":
 	train_gen = data_generator(csv_dir = TRAINING_DATA_PATH)
 
 	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
-	               loss = tf.keras.losses.MeanSquaredError(),
+	               loss = tf.keras.losses.mean_squared_error(),
 	               metrics = [metrics.mean_squared_error])
 
 	callbacks = [
