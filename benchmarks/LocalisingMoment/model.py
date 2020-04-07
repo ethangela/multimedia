@@ -45,10 +45,10 @@ def data_generator(csv_dir: str):
 			yield ((temporal_tf, global_tf, local_tf, language_tf), (np.zeros(1, dtype = np.float32)))
 
 def get_model():
-	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM), dtype = tf.float32)
-	video_global_features 		= tf.keras.Input(shape = (VID_GLOBAL_FEAT), dtype = tf.float32)
-	video_local_features 		= tf.keras.Input(shape = (VID_LOCAL_FEAT), dtype = tf.float32)
-	video_temporal_features 	= tf.keras.Input(shape = (VID_TEMPORAL_FEAT), dtype = tf.float32)
+	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM,), dtype = tf.float32)
+	video_global_features 		= tf.keras.Input(shape = (VID_GLOBAL_FEAT,), dtype = tf.float32)
+	video_local_features 		= tf.keras.Input(shape = (VID_LOCAL_FEAT,), dtype = tf.float32)
+	video_temporal_features 	= tf.keras.Input(shape = (VID_TEMPORAL_FEAT,), dtype = tf.float32)
 
 	# Sentence network
 	lstm_1 = LSTM(LSTM_HIDDEN_UNITS, return_sequences=True, return_state=True)
