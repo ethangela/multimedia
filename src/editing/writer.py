@@ -24,3 +24,7 @@ class DatasetWriter(object):
 		self._createParents(path = location)
 		df.to_json(location, orient = "records", lines = True)
 		return
+
+	def writeHdf5(self, df: pd.DataFrame, location: str) -> None:
+		self._createParents(path = location)
+		df.to_hdf(location, key='dataset', mode='w')
