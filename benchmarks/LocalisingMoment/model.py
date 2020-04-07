@@ -2,6 +2,7 @@ import ast
 import glob
 import tensorflow as tf
 import logging
+import numpy as np
 import os
 import pandas as pd
 from tensorflow.keras import layers, Model, metrics
