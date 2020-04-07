@@ -66,6 +66,7 @@ def get_model():
 
 	# Loss computation
 	subtract_1 		= Subtract()([vid_feat_out, sentence_out])
+	print(subtract_1)
 
 	model = Model(inputs  = [video_temporal_features, video_global_features, video_local_features, sentence_embedding_input], 
 				  outputs = subtract_1)	
