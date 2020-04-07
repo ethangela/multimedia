@@ -45,8 +45,8 @@ def get_global_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	"""
 	video_name 		= row["segmented_video_id"].replace('.mp4', '')
 	feat 			= np.array(features[video_name])
-	global_feat 	= np.mean(feat, axis = 1)
-	return pd.Series([global_feat])
+	global_feat 	= np.mean(feat, axis = 0)
+	return global_feat.tolist()
 
 def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	"""
@@ -57,14 +57,18 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	(feat_row, feat_cols) 	= feat.shape
 	feat_cp 				= np.zeros((feat_row, feat_cols))
 
-	frame_labels 	= ast.literal_eval(row["ground_truth"])
-	frame_labels_np = np.array(frame_labels)
+	frame_labels 		= ast.literal_eval(row["ground_truth"])
+	frame_labels_row 	= len(frame_labels)
+	frame_labels_np 	= np.array(frame_labels)
 
 	for i in range(feat_cols):
-		feat_cp[:, i] = feat[:, i] * frame_labels_np[:feat_row]
+		if feat_row > frame_labels_row:
+			feat_cp[:, i] = feat[:frame_labels_row, i] * frame_labels_np
+		else:
+			feat_cp[:, i] = feat[:, i] * frame_labels_np[:feat_row]
 
-	local_feat 		= np.mean(feat_cp, axis = 1)
-	return pd.Series([local_feat])
+	local_feat 		= np.mean(feat_cp, axis = 0)
+	return local_feat.tolist()
 
 def get_language_encoding(row) -> pd.Series:
 	"""
