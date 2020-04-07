@@ -97,6 +97,8 @@ def execute(segment_df: pd.DataFrame) -> None:
 	image_features 	= h5py.File(FEATURES_FILE, "r")
 	df = data_preprocessing(features = image_features, segment_df = segment_df)
 	output_file = os.path.join(SEGMENTED_CLIPS_ROOT, SEGMENTED_CLIPS_PATH, "{0}_lm_data.hdf5".format(os.getpid()))
+	
+	logging.info("Writing to {0}".format(output_file))
 	data_writer.writeHdf5(df = df, location = output_file)
 	image_features.close()
 
