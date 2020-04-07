@@ -4,7 +4,7 @@ import tensorflow as tf
 import logging
 import os
 from tensorflow.keras import layers, Model, metrics
-from tensorflow.keras.layers import LSTM, Dense, Input, concatenate, Flatten, Subtract
+from tensorflow.keras.layers import LSTM, Dense, Input, ReLU, Concatenate, Flatten, Subtract, Lambda
 
 LSTM_NUM_TIMESTEPS 	= 15 	# Also max sentence length
 LSTM_INPUT_DIM 		= 768
@@ -59,14 +59,13 @@ def get_model():
 	sentence_out 	= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(hidden_out)
 
 	# Video feature network
-	merged_features = tf.concat([video_global_features, video_local_features, video_temporal_features], axis = 1)
+	merged_features = Concatenate()([video_global_features, video_local_features, video_temporal_features])
 	dense_1			= Dense(DENSE_LAYER_1, activation=tf.nn.softmax)(merged_features)
-	relu_1 			= tf.nn.relu(dense_1)
+	relu_1 			= ReLU()(dense_1)
 	vid_feat_out 	= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(dense_1)
 
 	# Loss computation
 	subtract_1 		= Subtract()([vid_feat_out, sentence_out])
-	print(subtract_1)
 
 	model = Model(inputs  = [video_temporal_features, video_global_features, video_local_features, sentence_embedding_input], 
 				  outputs = subtract_1)	
