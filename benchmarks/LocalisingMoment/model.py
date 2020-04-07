@@ -1,18 +1,51 @@
+import ast
+import glob
 import tensorflow as tf
+import logging
+import os
 from tensorflow.keras import layers, Model, metrics
 from tensorflow.keras.layers import LSTM, Dense, Input, concatenate, Flatten
 
-LSTM_NUM_TIMESTEPS 	= 10
-LSTM_INPUT_DIM 		= 728
+LSTM_NUM_TIMESTEPS 	= 15 	# Also max sentence length
+LSTM_INPUT_DIM 		= 768
 LSTM_HIDDEN_UNITS 	= 128
 
 VID_GLOBAL_FEAT 	= 2048 	# Dimension size
 VID_LOCAL_FEAT 		= 2048
 VID_TEMPORAL_FEAT 	= 2
 
+TRAINING_DATA_PATH 	= os.environ["TRAINING_DATA_PATH"]
+CHECKPOINT_PATH 	= os.environ["MODEL_CHECKPOINT_PATH"]
+
+logging.basicConfig(level = logging.INFO)
+
+def data_generator(csv_dir: str):
+	csv_files = glob.glob(csv_dir + "/*.csv")
+	logging.info("Reading files: {0}".format(csv_files))
+
+	for each_file in csv_files:
+		df = pd.read_csv(each_file)
+		for _, row in df.iterrows():
+			temporal_enc = ast.literal_eval(row["temporal_enc"])
+			global_enc = ast.literal_eval(row["global_enc"])
+			local_enc = ast.literal_eval(row["local_enc"])
+			language_enc = ast.literal_eval(row["language_enc"])
+
+			temporal_tf = np.array(temporal_enc, dtype = np.float32)
+			global_tf = np.array(global_enc, dtype = np.float32)
+			local_tf = np.array(local_enc, dtype = np.float32)
+			language_tf = np.array(language_enc, dtype = np.float32)
+
+			if language_tf.shape[0] < LSTM_NUM_TIMESTEPS:
+				# Need to pad array to meet max LSTM timesteps
+				# Padding done only at the bottom of the array
+				current_rows = language_tf.shape[0]
+				language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
+
+			yield ((temporal_tf, global_tf, local_tf, language_tf), (np.zeros(1, dtype = np.float32)))
+
 def get_model():
 	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM), dtype = tf.float32)
-
 	video_global_features 		= tf.keras.Input(shape = (VID_GLOBAL_FEAT), dtype = tf.float32)
 	video_local_features 		= tf.keras.Input(shape = (VID_LOCAL_FEAT), dtype = tf.float32)
 	video_temporal_features 	= tf.keras.Input(shape = (VID_TEMPORAL_FEAT), dtype = tf.float32)
@@ -31,11 +64,13 @@ def get_model():
 	# Loss computation
 	l2_norm_loss	 = tf.norm(vid_feat_out - sentence_out, ord='euclidean', axis = 1)
 
-	model = Model(inputs = [sentence_embedding_input, video_global_features, video_local_features, video_temporal_features], 
+	model = Model(inputs = [video_temporal_features, video_global_features, video_local_features, sentence_embedding_input], 
 				  outputs = [l2_norm_loss])	
 
 if __name__ == "__main__":
 	lm_net 	= get_model()
+
+	train_gen = data_generator(csv_dir = TRAINING_DATA_PATH)
 
 	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
 	               loss = tf.keras.losses.MeanSquaredError(),
@@ -43,14 +78,15 @@ if __name__ == "__main__":
 
 	callbacks = [
 				    tf.keras.callbacks.ModelCheckpoint(
-				        filepath='mymodel_{epoch:02d}_{val_loss:.2f}.hdf5',
-				        save_best_only=True,
-				        monitor='val_loss',
-				        verbose=1)
+				        filepath = os.path.join(CHECKPOINT_PATH, "lm_{epoch:02d}.hdf5"),
+				        save_best_only = True,
+				        monitor = "val_loss",
+				        verbose = 1)
 				]
 
-	history = model.fit(x_train, y_train,
-						epochs = 1000,
-	                    batch_size = 100,
+
+	history = model.fit(x = train_gen,
+						verbose = 1,
+						epochs = 100,
 	                    callbacks = callbacks,
-	                    validation_data = (x_val, y_val))
+	                    workers = 10)
