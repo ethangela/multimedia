@@ -24,8 +24,8 @@ CHECKPOINT_PATH 	= os.environ["MODEL_CHECKPOINT_PATH"]
 
 logging.basicConfig(level = logging.INFO)
 
-def data_generator(csv_dir: str):
-	csv_files = glob.glob(csv_dir + "/*.csv")
+def data_generator():
+	csv_files = glob.glob(TRAINING_DATA_PATH + "/*.csv")
 	logging.info("Reading files: {0}".format(csv_files))
 
 	while True:
@@ -77,8 +77,8 @@ def get_model():
 if __name__ == "__main__":
 	lm_net 		= get_model()
 
-	train_gen 	= data_generator(csv_dir = TRAINING_DATA_PATH)
-	train_data 	= tf.data.Dataset.from_generator(train_gen, ((tf.float32, tf.float32, tf.float32, tf.float32), tf.float32)).batch(1)
+	# train_gen 	= data_generator(csv_dir = TRAINING_DATA_PATH)
+	train_data 	= tf.data.Dataset.from_generator(data_generator, ((tf.float32, tf.float32, tf.float32, tf.float32), tf.float32)).batch(1)
 
 	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
 	               loss = tf.keras.losses.mean_squared_error,
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 				        verbose = 1)
 				]
 
-	history 	= lm_net.fit(x = train_gen,
+	history 	= lm_net.fit(x = train_data,
 							 batch_size = 1000,
 							 steps_per_epoch = 100,
 							 verbose = 1,
