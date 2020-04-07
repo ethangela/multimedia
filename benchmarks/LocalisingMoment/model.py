@@ -28,26 +28,27 @@ def data_generator(csv_dir: str):
 	csv_files = glob.glob(csv_dir + "/*.csv")
 	logging.info("Reading files: {0}".format(csv_files))
 
-	for each_file in csv_files:
-		df = pd.read_csv(each_file)
-		for _, row in df.iterrows():
-			temporal_enc = ast.literal_eval(row["temporal_enc"])
-			global_enc = ast.literal_eval(row["global_enc"])
-			local_enc = ast.literal_eval(row["local_enc"])
-			language_enc = ast.literal_eval(row["language_enc"])
+	while True:
+		for each_file in csv_files:
+			df = pd.read_csv(each_file)
+			for _, row in df.iterrows():
+				temporal_enc = ast.literal_eval(row["temporal_enc"])
+				global_enc = ast.literal_eval(row["global_enc"])
+				local_enc = ast.literal_eval(row["local_enc"])
+				language_enc = ast.literal_eval(row["language_enc"])
 
-			temporal_tf = np.array(temporal_enc, dtype = np.float32)
-			global_tf = np.array(global_enc, dtype = np.float32)
-			local_tf = np.array(local_enc, dtype = np.float32)
-			language_tf = np.array(language_enc, dtype = np.float32)
+				temporal_tf = np.array(temporal_enc, dtype = np.float32)
+				global_tf = np.array(global_enc, dtype = np.float32)
+				local_tf = np.array(local_enc, dtype = np.float32)
+				language_tf = np.array(language_enc, dtype = np.float32)
 
-			if language_tf.shape[0] < LSTM_NUM_TIMESTEPS:
-				# Need to pad array to meet max LSTM timesteps
-				# Padding done only at the bottom of the array
-				current_rows = language_tf.shape[0]
-				language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
+				if language_tf.shape[0] < LSTM_NUM_TIMESTEPS:
+					# Need to pad array to meet max LSTM timesteps
+					# Padding done only at the bottom of the array
+					current_rows = language_tf.shape[0]
+					language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
 
-			yield (temporal_tf, global_tf, local_tf, language_tf), (np.zeros(DENSE_OUTPUT_FEAT, dtype = np.float32))
+				yield (temporal_tf, global_tf, local_tf, language_tf), (np.zeros(DENSE_OUTPUT_FEAT, dtype = np.float32))
 
 def get_model():
 	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM,), dtype = tf.float32)
@@ -77,6 +78,7 @@ if __name__ == "__main__":
 	lm_net 		= get_model()
 
 	train_gen 	= data_generator(csv_dir = TRAINING_DATA_PATH)
+	train_data 	= tf.data.Dataset.from_generator(train_gen, ((tf.float32, tf.float32, tf.float32, tf.float32), tf.float32)).batch(1)
 
 	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
 	               loss = tf.keras.losses.mean_squared_error,
