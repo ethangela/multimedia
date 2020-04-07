@@ -35,7 +35,6 @@ def data_generator(csv_dir: str):
 			global_enc = ast.literal_eval(row["global_enc"])
 			local_enc = ast.literal_eval(row["local_enc"])
 			language_enc = ast.literal_eval(row["language_enc"])
-			print(type(language_enc))
 
 			temporal_tf = np.array(temporal_enc, dtype = np.float32)
 			global_tf = np.array(global_enc, dtype = np.float32)
@@ -48,7 +47,7 @@ def data_generator(csv_dir: str):
 				current_rows = language_tf.shape[0]
 				language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
 
-			yield ((temporal_tf, global_tf, local_tf, language_tf), (np.zeros(DENSE_OUTPUT_FEAT, dtype = np.float32)))
+			yield (temporal_tf, global_tf, local_tf, language_tf), (np.zeros(DENSE_OUTPUT_FEAT, dtype = np.float32))
 
 def get_model():
 	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM,), dtype = tf.float32)
