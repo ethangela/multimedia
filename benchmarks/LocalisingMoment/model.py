@@ -89,7 +89,9 @@ if __name__ == "__main__":
 				]
 
 	history 	= lm_net.fit(x = train_gen,
-						verbose = 1,
-						epochs = 100,
-	                    callbacks = callbacks,
-	                    workers = 10)
+							 batch_size = 1000,
+							 steps_per_epoch = 100,
+							 verbose = 1,
+							 epochs = 100,
+		                     callbacks = callbacks,
+		                     workers = 10)
