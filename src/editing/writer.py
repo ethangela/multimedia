@@ -27,4 +27,4 @@ class DatasetWriter(object):
 
 	def writeHdf5(self, df: pd.DataFrame, location: str) -> None:
 		self._createParents(path = location)
-		df.to_hdf(location, key='dataset', mode='w')
+		df.to_hdf(location, key='/dataset', mode='w')
