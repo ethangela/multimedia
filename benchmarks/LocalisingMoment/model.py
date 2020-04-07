@@ -68,7 +68,7 @@ def get_model():
 	subtract_1 		= Subtract()([vid_feat_out, sentence_out])
 
 	model = Model(inputs  = [video_temporal_features, video_global_features, video_local_features, sentence_embedding_input], 
-				  outputs = [subtract_1])	
+				  outputs = subtract_1)	
 
 if __name__ == "__main__":
 	lm_net 	= get_model()
