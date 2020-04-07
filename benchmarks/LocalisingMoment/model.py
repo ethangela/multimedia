@@ -88,7 +88,6 @@ if __name__ == "__main__":
 				    tf.keras.callbacks.ModelCheckpoint(
 				        filepath = os.path.join(CHECKPOINT_PATH, "lm_{epoch:02d}.hdf5"),
 				        save_best_only = True,
-				        monitor = "val_loss",
 				        verbose = 1)
 				]
 
