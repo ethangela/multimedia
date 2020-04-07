@@ -35,6 +35,7 @@ def data_generator(csv_dir: str):
 			global_enc = ast.literal_eval(row["global_enc"])
 			local_enc = ast.literal_eval(row["local_enc"])
 			language_enc = ast.literal_eval(row["language_enc"])
+			print(type(language_enc))
 
 			temporal_tf = np.array(temporal_enc, dtype = np.float32)
 			global_tf = np.array(global_enc, dtype = np.float32)
