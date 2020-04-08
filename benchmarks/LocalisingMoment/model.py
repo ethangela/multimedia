@@ -186,11 +186,11 @@ if __name__ == "__main__":
 						]
 
 	history 			= lm_net.fit(x = train_data_gen,
-									 steps_per_epoch = 200,
+									 steps_per_epoch = math.ceil(562639 / BATCH_SIZE),
 									 validation_data = validation_data_gen,
-									 validation_steps = 200,
+									 validation_steps = math.ceil(56281 / BATCH_SIZE),
  									 epochs = 200,
 									 verbose = 1,
 				                     callbacks = callbacks,
 				                     use_multiprocessing = True,
-				                     workers = 30)
+				                     workers = 60)
