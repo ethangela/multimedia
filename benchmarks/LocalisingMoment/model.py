@@ -21,8 +21,12 @@ DENSE_OUTPUT_FEAT 	= 20
 
 TRAINING_DATA_PATH 	= os.environ["TRAINING_DATA_PATH"]
 CHECKPOINT_PATH 	= os.environ["MODEL_CHECKPOINT_PATH"]
+BATCH_SIZE 			= int(os.environ.get("BATCH_SIZE", 1000))
+TOTAL_FRAMES 		= int(os.environ.get("TOTAL_FRAMES", 120))
 
 logging.basicConfig(level = logging.INFO)
+
+logging.info("Setting batch size to {0}".format(BATCH_SIZE))
 
 def data_generator():
 	csv_files = glob.glob(TRAINING_DATA_PATH + "/*.csv")
@@ -31,24 +35,44 @@ def data_generator():
 	while True:
 		for each_file in csv_files:
 			df = pd.read_csv(each_file)
-			for _, row in df.iterrows():
-				temporal_enc = ast.literal_eval(row["temporal_enc"])
-				global_enc = ast.literal_eval(row["global_enc"])
-				local_enc = ast.literal_eval(row["local_enc"])
-				language_enc = ast.literal_eval(row["language_enc"])
+			split_chunks = int(len(df) / BATCH_SIZE)
+			df_split = np.array_split(df, split_chunks)
 
-				temporal_tf = np.array(temporal_enc, dtype = np.float32)
-				global_tf = np.array(global_enc, dtype = np.float32)
-				local_tf = np.array(local_enc, dtype = np.float32)
-				language_tf = np.array(language_enc, dtype = np.float32)
+			# Prepare batch training data
+			for each_df_split in df_split:
+				temporal_enc_arr 	= None
+				global_enc_arr 		= None
+				local_enc_arr 		= None
+				language_enc_arr 	= None
 
-				if language_tf.shape[0] < LSTM_NUM_TIMESTEPS:
-					# Need to pad array to meet max LSTM timesteps
-					# Padding done only at the bottom of the array
-					current_rows = language_tf.shape[0]
-					language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
+				for _, row in each_df_split.iterrows():
+					temporal_enc = ast.literal_eval(row["temporal_enc"])
+					global_enc = ast.literal_eval(row["global_enc"])
+					local_enc = ast.literal_eval(row["local_enc"])
+					language_enc = ast.literal_eval(row["language_enc"])
 
-				yield (temporal_tf, global_tf, local_tf, language_tf), (np.zeros(DENSE_OUTPUT_FEAT, dtype = np.float32))
+					temporal_tf = np.array(temporal_enc, dtype = np.float32)[:TOTAL_FRAMES]  
+					global_tf = np.array(global_enc, dtype = np.float32)[:TOTAL_FRAMES]  
+					local_tf = np.array(local_enc, dtype = np.float32)[:TOTAL_FRAMES]  
+					language_tf = np.array(language_enc, dtype = np.float32)[:TOTAL_FRAMES]
+
+					if language_tf.shape[0] < LSTM_NUM_TIMESTEPS:
+						# Need to pad array to meet max LSTM timesteps
+						# Padding done only at the bottom of the array
+						current_rows = language_tf.shape[0]
+						language_tf = np.pad(language_tf, [(0, LSTM_NUM_TIMESTEPS - current_rows), (0, 0)], mode = 'constant', constant_values = 0)  
+	
+					temporal_tf = np.expand_dims(temporal_tf, axis=0) 
+					global_tf = np.expand_dims(global_tf, axis=0) 
+					local_tf = np.expand_dims(local_tf, axis=0) 
+					language_tf = np.expand_dims(language_tf, axis=0) 
+
+					temporal_enc_arr = np.vstack((temporal_tf, temporal_enc_arr)) if temporal_enc_arr is not None else temporal_tf
+					global_enc_arr = np.vstack((global_tf, global_enc_arr)) if global_enc_arr is not None else global_tf
+					local_enc_arr = np.vstack((local_tf, local_enc_arr)) if local_enc_arr is not None else local_tf
+					language_enc_arr = np.vstack((language_tf, language_enc_arr)) if language_enc_arr is not None else language_tf
+
+				yield ((temporal_enc_arr, global_enc_arr, local_enc_arr, language_enc_arr), (np.zeros((len(each_df_split), DENSE_OUTPUT_FEAT), dtype = np.float32)))
 
 def get_model():
 	sentence_embedding_input 	= tf.keras.Input(shape = (LSTM_NUM_TIMESTEPS, LSTM_INPUT_DIM,), dtype = tf.float32)
@@ -92,8 +116,7 @@ if __name__ == "__main__":
 				]
 
 	history 	= lm_net.fit(x = train_data,
-							 batch_size = 1000,
-							 steps_per_epoch = 100,
+							 steps_per_epoch = int(562639 / BATCH_SIZE),
 							 verbose = 1,
 							 epochs = 100,
 		                     callbacks = callbacks,
