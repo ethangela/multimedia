@@ -140,6 +140,11 @@ def get_model():
 	return model
 
 if __name__ == "__main__":
+	os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+
+	config = tf.ConfigProto()
+	sess = tf.Session(config=config)
+
 	train_data_gen 			= tf.data.Dataset.from_generator(generator = get_training_data_generator, 
 															 output_types = ((tf.float32, tf.float32, tf.float32, tf.float32), tf.float32),
 															 output_shapes = 	((	
