@@ -192,4 +192,5 @@ if __name__ == "__main__":
  									 epochs = 200,
 									 verbose = 1,
 				                     callbacks = callbacks,
-				                     workers = 12)
+				                     use_multiprocessing = True,
+				                     workers = 30)
