@@ -193,4 +193,5 @@ if __name__ == "__main__":
 									 verbose = 1,
 				                     callbacks = callbacks,
 				                     use_multiprocessing = True,
-				                     workers = 60)
+				                     max_queue_size=10,
+				                     workers = 100)
