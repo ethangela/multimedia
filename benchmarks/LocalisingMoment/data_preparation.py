@@ -70,8 +70,8 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	feat_cp_wo_zeros 	= feat_cp[~np.all(feat_cp == 0, axis = 1)]
 	local_feat 			= np.mean(feat_cp_wo_zeros, axis = 0)
 	if feat_cp_wo_zeros.size == 0:
-		print(feat)
-		np.save("debug.txt", feat)
+		import IPython
+		IPython.embed()
 	return local_feat.tolist()
 
 def get_language_encoding(row) -> pd.Series:
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 		os.remove(prior_files)
 
 	segment_metadata_df = pd.read_csv(SEGMENT_METADATA_CSV)
-	# execute(segment_df = segment_metadata_df)
-	segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
-	with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
-		pool.map(execute, segment_metadata_df_splits)
+	execute(segment_df = segment_metadata_df)
+	# segment_metadata_df_splits = np.array_split(segment_metadata_df, MAX_THREAD_POOL)
+	# with multiprocessing.Pool(processes = MAX_THREAD_POOL) as pool:
+	# 	pool.map(execute, segment_metadata_df_splits)
