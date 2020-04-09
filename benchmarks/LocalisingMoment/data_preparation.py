@@ -67,7 +67,8 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 		else:
 			feat_cp[:, i] = feat[:, i] * frame_labels_np[:feat_row]
 
-	local_feat 		= np.mean(feat_cp, axis = 0)
+	feat_cp_wo_zeros 	= feat_cp[~np.all(feat_cp == 0, axis = 1)]
+	local_feat 			= np.mean(feat_cp_wo_zeros, axis = 0)
 	return local_feat.tolist()
 
 def get_language_encoding(row) -> pd.Series:
