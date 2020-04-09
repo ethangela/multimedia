@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import time
 from tensorflow.keras import layers, Model, metrics
-from tensorflow.keras.layers import LSTM, Dense, Input, ReLU, Concatenate, Flatten, Subtract, Lambda
+from tensorflow.keras.layers import LSTM, Dense, Input, ReLU, Concatenate, Subtract, BatchNormalization
 
 LSTM_NUM_TIMESTEPS 	= 15 	# Also max sentence length
 LSTM_INPUT_DIM 		= 768
@@ -125,15 +125,17 @@ def get_model():
 	lstm_1 = LSTM(LSTM_HIDDEN_UNITS, return_sequences = True, return_state = True)
 	seq_out, hidden_out, carry_out = lstm_1(sentence_embedding_input)
 	sentence_out 	= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(hidden_out)
+	sentence_out_norm = BatchNormalization()(sentence_out)
 
 	# Video feature network
 	merged_features = Concatenate()([video_global_features, video_local_features, video_temporal_features])
 	dense_1			= Dense(DENSE_LAYER_1, activation=tf.nn.softmax)(merged_features)
 	relu_1 			= ReLU()(dense_1)
 	vid_feat_out 	= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(dense_1)
+	vid_feat_out_norm = BatchNormalization()(vid_feat_out)
 
 	# Loss computation
-	subtract_1 		= Subtract()([vid_feat_out, sentence_out])
+	subtract_1 		= Subtract()([vid_feat_out_norm, sentence_out_norm])
 
 	model = Model(inputs  = [video_temporal_features, video_global_features, video_local_features, sentence_embedding_input], 
 				  outputs = subtract_1)	
