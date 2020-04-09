@@ -70,8 +70,8 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	feat_cp_wo_zeros 	= feat_cp[~np.all(feat_cp == 0, axis = 1)]
 	local_feat 			= np.mean(feat_cp_wo_zeros, axis = 0)
 	if feat_cp_wo_zeros.size == 0:
-		print(feat_cp)
-		np.save("debug.txt", feat_cp)
+		print(feat)
+		np.save("debug.txt", feat)
 	return local_feat.tolist()
 
 def get_language_encoding(row) -> pd.Series:
