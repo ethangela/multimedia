@@ -71,7 +71,7 @@ def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	local_feat 			= np.mean(feat_cp_wo_zeros, axis = 0)
 	if feat_cp_wo_zeros.size == 0:
 		print(feat_cp)
-		np.savetext("debug.csv", feat_cp, delimiter=",")
+		np.save("debug.txt", feat_cp)
 	return local_feat.tolist()
 
 def get_language_encoding(row) -> pd.Series:
