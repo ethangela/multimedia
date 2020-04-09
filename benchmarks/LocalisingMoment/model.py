@@ -128,11 +128,12 @@ def get_model():
 	sentence_out_norm = BatchNormalization()(sentence_out)
 
 	# Video feature network
-	merged_features = Concatenate()([video_global_features, video_local_features, video_temporal_features])
-	dense_1			= Dense(DENSE_LAYER_1, activation=tf.nn.softmax)(merged_features)
-	relu_1 			= ReLU()(dense_1)
-	vid_feat_out 	= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(dense_1)
-	vid_feat_out_norm = BatchNormalization()(vid_feat_out)
+	merged_features 	= Concatenate()([video_global_features, video_local_features, video_temporal_features])
+	dense_1				= Dense(DENSE_LAYER_1, activation=tf.nn.softmax)(merged_features)
+	dense_1_norm 		= BatchNormalization()(dense_1)
+	relu_1 				= ReLU()(dense_1_norm)
+	vid_feat_out 		= Dense(DENSE_OUTPUT_FEAT, activation=tf.nn.softmax)(relu_1)
+	vid_feat_out_norm 	= BatchNormalization()(vid_feat_out)
 
 	# Loss computation
 	subtract_1 		= Subtract()([vid_feat_out_norm, sentence_out_norm])
@@ -188,9 +189,9 @@ if __name__ == "__main__":
 						]
 
 	history 			= lm_net.fit(x = train_data_gen,
-									 steps_per_epoch = math.ceil(562639 / BATCH_SIZE),
+									 steps_per_epoch = math.ceil(56265 / BATCH_SIZE),
 									 validation_data = validation_data_gen,
-									 validation_steps = math.ceil(56281 / BATCH_SIZE),
+									 validation_steps = math.ceil(11257 / BATCH_SIZE),
  									 epochs = 200,
 									 verbose = 1,
 				                     callbacks = callbacks,
