@@ -39,7 +39,7 @@ def get_temporal_encoding(row) -> pd.Series:
 				(max_key_indx - min_frames) / (max_frames - min_frames),
 			]
 
-def get_global_encoding(features: h5py._hl.files.File, row) -> pd.Series:
+def get_global_encoding(features: h5py._hl.files.File, row) -> [float]:
 	"""
 	global encoding is the mean over all frame features
 	"""
@@ -48,7 +48,7 @@ def get_global_encoding(features: h5py._hl.files.File, row) -> pd.Series:
 	global_feat 	= np.mean(feat, axis = 0)
 	return global_feat.tolist()
 
-def get_local_encoding(features: h5py._hl.files.File, row) -> pd.Series:
+def get_local_encoding(features: h5py._hl.files.File, row) -> [float]:
 	"""
 	local encoding is the mean over all key frames
 	"""
