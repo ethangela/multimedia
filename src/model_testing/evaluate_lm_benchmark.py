@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
 	logging.info("{0}".format(results))
 
-	acc_correct_selections 	= [i[0] for i in results]
-	acc_total_choices 		= [i[1] for i in results]
+	acc_correct_selections 	= sum([i[0] for i in results])
+	acc_total_choices 		= sum([i[1] for i in results])
 
 	logging.info("Average percentage for R@{0} : {1} %".format(K_BEST, acc_correct_selections / acc_total_choices))
