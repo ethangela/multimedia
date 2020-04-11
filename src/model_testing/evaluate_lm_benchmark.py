@@ -9,7 +9,6 @@ import pandas as pd
 from benchmarks.LocalisingMoment.data_preparation import get_global_encoding, get_language_encoding, get_temporal_encoding
 from benchmarks.LocalisingMoment.model import compile_model
 from bert_embedding import BertEmbedding
-from sklearn.utils import shuffle
 
 MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
 TEST_CSV 			= os.environ["TEST_CSV"]
@@ -50,7 +49,7 @@ We do the following:
 def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
 	candidate_row_class 	= candidate_row["classname"]
 	negative_example_df 	= df[df["classname"] != candidate_row_class]
-	shuffled_df 			= shuffle(negative_example_df)
+	shuffled_df 			= negative_example_df.sample(frac = 1)
 	return shuffled_df[:NEGATIVE_SAMPLES]
 
 def select_same_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
