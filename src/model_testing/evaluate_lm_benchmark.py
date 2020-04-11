@@ -166,18 +166,12 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Localising moments benchmark test')
 
-	parser.add_argument('--test_trails', action='store_const', type=int,
-						default=1,help='number of testings')
-	parser.add_argument('--positive_samples', action='store_const', type=int,
-						default=10,help='number of positive classes')
-	parser.add_argument('--negative_samples', action='store_const', type=int,
-						default=20,help='number of negative classes')
-	parser.add_argument('--k_best', action='store_const', type=int,
-						default=10,help='to select top K clips based on lowest error')
-	parser.add_argument('--iou', action='store_const', type=float,
-						default=0.3,help='iou threshold')
-	parser.add_argument('--key_frame_threshold', action='store_const', type=float,
-						default=0.7,help='threshold (after normalization) to determine if it is a key frame or not')
+	parser.add_argument('--test_trails', type=int, default=1,help='number of testings')
+	parser.add_argument('--positive_samples', type=int, default=10,help='number of positive classes')
+	parser.add_argument('--negative_samples', type=int, default=20,help='number of negative classes')
+	parser.add_argument('--k_best'. type=int, default=10,help='to select top K clips based on lowest error')
+	parser.add_argument('--iou', type=float, default=0.3,help='iou threshold')
+	parser.add_argument('--key_frame_threshold', type=float,default=0.7,help='threshold (after normalization) to determine if it is a key frame or not')
 
 	args = parser.parse_args()
 
