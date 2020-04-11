@@ -55,7 +55,7 @@ def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.
 def select_same_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
 	candidate_row_class 	= candidate_row["classname"]
 	positive_example_df 	= df[df["classname"] == candidate_row_class]
-	shuffled_df 			= shuffle(positive_example_df)
+	shuffled_df 			= positive_example_df.sample(frac = 1)
 	return shuffled_df[:POSITIVE_SAMPLES]
 
 def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, sentence_encoding):
