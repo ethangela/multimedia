@@ -121,6 +121,8 @@ def get_iou_df(evaluation_df: pd.DataFrame, ground_truth_row):
 
 def get_correct_vid_selection_count(best_k_df: pd.DataFrame, ground_truth_row):
 	correct_selections = 0
+	import IPython
+	IPython.embed()
 	for _, row in best_k_df.iterrows():
 		# Assert correct class selection
 		is_correct = (row["classname"] == ground_truth_row["classname"]) and (row["iou"] >= IOU)
