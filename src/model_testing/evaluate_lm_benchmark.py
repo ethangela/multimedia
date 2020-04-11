@@ -80,7 +80,7 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 
 	sentence_encoding 	= np.expand_dims(sentence_encoding, axis=0) 
 	for indx, row in evaluation_df.iterrows():
-		video_name 			= row["segmented_video_id"].replace('.mp4', '')
+		video_name 			= row["unique_clip_name"].replace('.mp4', '')
 
 		global_encoding 	= get_global_encoding(features = image_features, row = row)
 		global_encoding 	= np.array(global_encoding, dtype = np.float32)
