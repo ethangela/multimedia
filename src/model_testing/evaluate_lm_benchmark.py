@@ -80,8 +80,6 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 
 	sentence_encoding 	= np.expand_dims(sentence_encoding, axis=0) 
 	for indx, row in evaluation_df.iterrows():
-		import IPython
-		IPython.embed()
 		video_name 			= row["unique_clip_name"].replace('.mp4', '')
 
 		global_encoding 	= get_global_encoding(features = image_features, row = row)
@@ -142,7 +140,10 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 
 		positive_sample_df 	= select_same_class_df(df = df, candidate_row = row, size = POSITIVE_SAMPLES)
 		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
-		union_df 			= pd.concat([row, positive_sample_df, negative_sample_df])
+		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
+
+		import IPython
+		IPython.embed()
 
 		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
 											image_features = image_features, sentence_encoding = sentence_encoding_padded)
