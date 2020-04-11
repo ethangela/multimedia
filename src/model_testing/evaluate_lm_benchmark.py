@@ -150,9 +150,6 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
 
-		import IPython
-		IPython.embed()
-
 		# Take top K videos
 		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
 
