@@ -1,4 +1,5 @@
 import ast
+import argparse
 import copy
 import tensorflow as tf 
 import h5py
@@ -15,13 +16,13 @@ TEST_CSV 			= os.environ["TEST_CSV"]
 FEATURES_FILE 		= os.environ["FEATURES_FILE"]
 
 LSTM_NUM_TIMESTEPS 	= 15
-TEST_TRAILS 		= 1
-POSITIVE_SAMPLES 	= 10
-NEGATIVE_SAMPLES 	= 20
-K_BEST				= 10
 DENSE_OUTPUT_FEAT 	= 20
-IOU 				= 0.1
-KEY_FRAME_THRESHOLD = 0.7
+TEST_TRAILS 		= None
+POSITIVE_SAMPLES 	= None
+NEGATIVE_SAMPLES 	= None
+K_BEST				= None
+IOU 				= None
+KEY_FRAME_THRESHOLD = None
 
 bert_embedding 		= BertEmbedding()
 logging.basicConfig(level=logging.INFO)
@@ -147,6 +148,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 											image_features = image_features, sentence_encoding = sentence_encoding_padded)
 
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
+		import IPython
+		IPython.embed()
 
 		# Take top K videos
 		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
@@ -161,6 +164,30 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 	return results
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Localising moments benchmark test')
+
+	parser.add_argument('--test_trails', action='store_const', type=int,
+						default=1,help='number of testings')
+	parser.add_argument('--positive_samples', action='store_const', type=int,
+						default=10,help='number of positive classes')
+	parser.add_argument('--negative_samples', action='store_const', type=int,
+						default=20,help='number of negative classes')
+	parser.add_argument('--k_best', action='store_const', type=int,
+						default=10,help='to select top K clips based on lowest error')
+	parser.add_argument('--iou', action='store_const', type=float,
+						default=0.3,help='iou threshold')
+	parser.add_argument('--key_frame_threshold', action='store_const', type=float,
+						default=0.7,help='threshold (after normalization) to determine if it is a key frame or not')
+
+	args = parser.parse_args()
+
+	TEST_TRAILS 		= args.test_trails
+	POSITIVE_SAMPLES 	= args.positive_samples
+	NEGATIVE_SAMPLES 	= args.negative_samples
+	K_BEST				= args.k_best
+	IOU 				= args.iou
+	KEY_FRAME_THRESHOLD = args.key_frame_threshold
+
 	logging.info("Loading model weights from {0}".format(MODEL_WEIGHTS_PATH))
 	model 	= compile_model()
 	model.load_weights(MODEL_WEIGHTS_PATH)
