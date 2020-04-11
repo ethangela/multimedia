@@ -20,7 +20,7 @@ POSITIVE_SAMPLES 	= 10
 NEGATIVE_SAMPLES 	= 20
 K_BEST				= 10
 DENSE_OUTPUT_FEAT 	= 20
-IOU 				= 0.5
+IOU 				= 0.1
 KEY_FRAME_THRESHOLD = 0.7
 
 bert_embedding 		= BertEmbedding()
@@ -169,4 +169,4 @@ if __name__ == "__main__":
 	results = init_test(df = df, model = model)
 
 	logging.info("{0}".format(results))
-	
+
