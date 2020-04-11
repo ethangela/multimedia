@@ -15,7 +15,7 @@ TEST_CSV 			= os.environ["TEST_CSV"]
 FEATURES_FILE 		= os.environ["FEATURES_FILE"]
 
 LSTM_NUM_TIMESTEPS 	= 15
-TEST_TRAILS 		= 10
+TEST_TRAILS 		= 1
 POSITIVE_SAMPLES 	= 10
 NEGATIVE_SAMPLES 	= 20
 K_BEST				= 10
@@ -65,7 +65,8 @@ def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, 
 		each_frame_encoding = np.expand_dims(each_frame_encoding, axis=0) 
 
 		loss, _ = model.evaluate(	x = (temporal_encoding, global_encoding, each_frame_encoding, sentence_encoding), 
-									y = (np.zeros((1, DENSE_OUTPUT_FEAT), dtype = np.float32)))
+									y = (np.zeros((1, DENSE_OUTPUT_FEAT), dtype = np.float32)), 
+									verbose = 0)
 		frame_errors.append(loss)
 	return frame_errors
 
@@ -142,9 +143,6 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
 		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
 
-		import IPython
-		IPython.embed()
-
 		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
 											image_features = image_features, sentence_encoding = sentence_encoding_padded)
 
@@ -156,6 +154,7 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
 		total_choices 		= len(best_k_df)
 
+		logging.info("Max IOU {0}".format(iou_df["iou"].max()))
 		logging.info("IoU: {0}, Top K: {1}, Selection {2} / {3}".format(IOU, K_BEST, 
 																		correct_selections, total_choices))
 		results.append((correct_selections, total_choices))
