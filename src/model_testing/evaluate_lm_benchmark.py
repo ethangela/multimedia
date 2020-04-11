@@ -6,7 +6,8 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from benchmarks.LocalisingMoment.data_preparation import compile_model, get_global_encoding, get_language_encoding, get_temporal_encoding
+from benchmarks.LocalisingMoment.data_preparation import get_global_encoding, get_language_encoding, get_temporal_encoding
+from benchmarks.LocalisingMoment.model import compile_model
 from bert_embedding import BertEmbedding
 from sklearn.utils import shuffle
 
