@@ -133,7 +133,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 	results = []
 
 	for _, row in df[:TEST_TRAILS].iterrows():
-		logging.info("Evaluating video {0} of class {1}".format(row["unique_clip_name"], row["classname"]))
+		logging.info("Evaluating video {0} : class {1} : text {2}".format(row["unique_clip_name"], 
+																			row["classname"], row["text"]))
 
 		sentence_encoding 			= get_language_encoding(row = row)
 		sentence_encoding 			= np.array(sentence_encoding, dtype = np.float32)
