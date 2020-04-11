@@ -129,10 +129,11 @@ def get_correct_vid_selection_count(best_k_df: pd.DataFrame, ground_truth_row):
 	return correct_selections
 
 def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
-	image_features = h5py.File(FEATURES_FILE, "r")
-	results = []
+	image_features 	= h5py.File(FEATURES_FILE, "r")
+	results 		= []
+	shuffle_df 		= df.sample(frac = 1)
 
-	for _, row in df[:TEST_TRAILS].iterrows():
+	for _, row in shuffle_df[:TEST_TRAILS].iterrows():
 		logging.info("Evaluating video {0} : class {1} : text {2}".format(row["unique_clip_name"], 
 																			row["classname"], row["text"]))
 
@@ -141,8 +142,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		words 						= sentence_encoding.shape[0]
 		sentence_encoding_padded 	= np.pad(sentence_encoding, [(0, LSTM_NUM_TIMESTEPS - words), (0, 0)], mode = 'constant', constant_values = 0)
 
-		positive_sample_df 	= select_same_class_df(df = df, candidate_row = row, size = POSITIVE_SAMPLES)
-		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
+		positive_sample_df 	= select_same_class_df(df = shuffle_df, candidate_row = row, size = POSITIVE_SAMPLES)
+		negative_sample_df 	= select_incorrect_class_df(df = shuffle_df, candidate_row = row, size = NEGATIVE_SAMPLES)
 		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
 
 		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
