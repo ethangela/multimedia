@@ -6,14 +6,16 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from benchmarks.LocalisingMoment.data_preparation import get_global_encoding, get_language_encoding, get_temporal_encoding
+from benchmarks.LocalisingMoment.data_preparation import compile_model, get_global_encoding, get_language_encoding, get_temporal_encoding
 from bert_embedding import BertEmbedding
+from sklearn.utils import shuffle
 
 MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
 TEST_CSV 			= os.environ["TEST_CSV"]
 FEATURES_FILE 		= os.environ["FEATURES_FILE"]
 
 LSTM_NUM_TIMESTEPS 	= 15
+TEST_TRAILS 		= 10
 POSITIVE_SAMPLES 	= 10
 NEGATIVE_SAMPLES 	= 20
 K_BEST				= 10
@@ -44,11 +46,17 @@ We do the following:
 8) Identify #videos with IoU > m and correct classes from baseline
 """
 
-def select_incorrect_class_df(df: pd.DataFrame, candidate_row: str, size: int) -> pd.DataFrame:
-	pass
+def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
+	candidate_row_class 	= candidate_row["classname"]
+	negative_example_df 	= df[df["classname"] != candidate_row_class]
+	shuffled_df 			= shuffle(negative_example_df)
+	return shuffled_df[:NEGATIVE_SAMPLES]
 
-def select_same_class_df(df: pd.DataFrame, candidate_row: str, size: int) -> pd.DataFrame:
-	pass	
+def select_same_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
+	candidate_row_class 	= candidate_row["classname"]
+	positive_example_df 	= df[df["classname"] == candidate_row_class]
+	shuffled_df 			= shuffle(positive_example_df)
+	return shuffled_df[:POSITIVE_SAMPLES]
 
 def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, sentence_encoding):
 	frame_errors = []
@@ -122,8 +130,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 	image_features = h5py.File(FEATURES_FILE, "r")
 	results = []
 
-	for _, row in df.iterrows():
-		logging.info("Evaluating video {0}".format(row["unique_clip_name"]))
+	for _, row in df[:TEST_TRAILS].iterrows():
+		logging.info("Evaluating video {0} of class {1}".format(row["unique_clip_name"], row["classname"]))
 
 		sentence_encoding 			= get_language_encoding(row = row)
 		sentence_encoding 			= np.array(sentence_encoding, dtype = np.float32)
@@ -144,12 +152,16 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
 		total_choices 		= len(best_k_df)
+
+		logging.info("IoU: {0}, Top K: {1}, Selection {2} / {3}".format(IOU, K_BEST, 
+																		correct_selections, total_choices))
 		results.append((correct_selections, total_choices))
 	return results
 
 if __name__ == "__main__":
 	logging.info("Loading model weights from {0}".format(MODEL_WEIGHTS_PATH))
-
-	model = get_model()
+	model 	= compile_model()
 	model.load_weights(MODEL_WEIGHTS_PATH)
 
+	df 		= pd.read_csv(TEST_CSV)
+	results = init_test(df = df, model = model)

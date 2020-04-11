@@ -142,6 +142,13 @@ def get_model():
 				  outputs = subtract_1)	
 	return model
 
+def compile_model():
+	model = get_model()
+	model.compile(optimizer = tf.keras.optimizers.SGD(),
+	               loss = tf.keras.losses.mean_squared_error,
+	               metrics = [metrics.mean_squared_error])
+	return model
+
 if __name__ == "__main__":
 	os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 
@@ -172,11 +179,7 @@ if __name__ == "__main__":
 												 					)
 												 				)
 
-	lm_net 		= get_model()
-
-	lm_net.compile(optimizer = tf.keras.optimizers.SGD(),
-	               loss = tf.keras.losses.mean_squared_error,
-	               metrics = [metrics.mean_squared_error])
+	lm_net 				= compile_model()
 
 	checkpoint_path 	= os.path.join(CHECKPOINT_PATH, str(EXECUTION_TIME))
 	os.mkdir(checkpoint_path)
