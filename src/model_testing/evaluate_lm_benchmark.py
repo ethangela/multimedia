@@ -110,10 +110,10 @@ def get_iou_df(evaluation_df: pd.DataFrame, ground_truth_row):
 		predicted_np 			= np.array(evaluation_df["key_frame_labels"][indx], dtype = int)
 
 		ground_truth_labels 	= ast.literal_eval(ground_truth_row["ground_truth"])
-		ground_truth_np 		= np.array(ground_truth_labels, dtype = int)[:len(predicted_np)]
+		ground_truth_np 		= np.array(ground_truth_labels, dtype = int)
 
 		intersection 			= 0
-		for i in range(len(predicted_np)):
+		for i in range(min(len(predicted_np), len(ground_truth_np))):
 			intersection 		+= 1 if predicted_np[i] == ground_truth_np[i] == 1 else 0
 
 		union 					= sum(ground_truth_np) + sum(predicted_np) - intersection
