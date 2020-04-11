@@ -98,7 +98,7 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 												temporal_encoding = temporal_encoding, frame_encodings = frame_encodings, 
 												sentence_encoding = sentence_encoding)
 
-		evaluation_df["predicted_error"][indx] 		= sum(video_errors)
+		evaluation_df["predicted_error"][indx] 		= np.mean(video_errors)
 		evaluation_df["key_frame_labels"][indx] 	= get_key_frames(video_errors = video_errors, threshold = KEY_FRAME_THRESHOLD)
 	return evaluation_df
 
@@ -149,8 +149,6 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 											image_features = image_features, sentence_encoding = sentence_encoding_padded)
 
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
-		import IPython
-		IPython.embed()
 
 		# Take top K videos
 		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
