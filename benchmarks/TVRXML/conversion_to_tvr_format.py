@@ -12,6 +12,7 @@ import glob
 import json
 import logging
 import os
+import numpy as np
 import pandas as pd 
 from editing.writer import DatasetWriter
 from typing import Dict
@@ -35,11 +36,13 @@ def convert_to_tvr_query(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 													 									"text" : "desc"})
 
 	assigned_constants = {	"duration" 	: 4, 
-							"ts" 		: "[0, 4]", 
-							"type" 		: data_type, 
-							"desc_id" 	: 1}
+							"type" 		: data_type
+						}
 
 	tvr_filter_relevant_columns_df 	= tvr_filter_relevant_columns_df.assign(**assigned_constants)
+	tvr_filter_relevant_columns_df["ts"] = [[0,4] for _ in tvr_filter_relevant_columns_df.index]
+	tvr_filter_relevant_columns_df["desc_id"] = np.arange(len(tvr_df))
+	tvr_filter_relevant_columns_df["vid_name"] = tvr_filter_relevant_columns_df["vid_name"].str.replace('\.mp4', '', regex=True)
 	return tvr_filter_relevant_columns_df
 
 if __name__ == "__main__":
@@ -47,12 +50,12 @@ if __name__ == "__main__":
 	train_files 	= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, TRAIN_VAL_PATH) + "/*train.csv")
 	train_df 		= pd.concat(map(pd.read_csv, train_files))
 	train_tvr_df 	= convert_to_tvr_query(df = train_df, data_type = "t")
-	train_file_path = os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_train.csv")
+	train_file_path = os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_train.jsonl")
 	data_writer.writeJsonL(df = train_tvr_df, location = train_file_path)
 
 	# For validation dataset
 	validation_files 		= glob.glob(os.path.join(SEGMENTED_CLIPS_ROOT, TRAIN_VAL_PATH) + "/*validation.csv")
 	validation_df 			= pd.concat(map(pd.read_csv, validation_files))
 	validation_tvr_df 		= convert_to_tvr_query(df = validation_df, data_type = "v")
-	validation_file_path 	= os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_validation.csv")
+	validation_file_path 	= os.path.join(SEGMENTED_CLIPS_ROOT, TVR_PATH, "tvr_validation.jsonl")
 	data_writer.writeJsonL(df = validation_tvr_df, location = validation_file_path)
