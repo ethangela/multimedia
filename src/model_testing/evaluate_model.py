@@ -1,13 +1,12 @@
 import argparse
 import copy
-import tensorflow as tf 
+
 import h5py
 import logging
 import numpy as np
 import os
 import pandas as pd
-from benchmarks.LocalisingMoment.data_preparation import get_global_encoding, get_language_encoding, get_temporal_encoding
-from benchmarks.LocalisingMoment.model import compile_model
+from benchmarks.LocalisingMoment.data_preparation import get_language_encoding
 from model_testing.commons import *
 
 MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
@@ -15,15 +14,12 @@ TEST_CSV 			= os.environ["TEST_CSV"]
 FEATURES_FILE 		= os.environ["FEATURES_FILE"]
 
 LSTM_NUM_TIMESTEPS 	= 15
-DENSE_OUTPUT_FEAT 	= 20
 TEST_TRAILS 		= None
 POSITIVE_SAMPLES 	= None
 NEGATIVE_SAMPLES 	= None
 K_BEST				= None
 IOU 				= None
 KEY_FRAME_THRESHOLD = None
-
-logging.basicConfig(level=logging.INFO)
 
 """
 Test is done using Recall@K with IoU = m
@@ -45,22 +41,7 @@ We do the following:
 8) Identify #videos with IoU > m and correct classes from baseline
 """
 
-def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, sentence_encoding):
-	frame_errors = []
-	for each_frame_encoding in frame_encodings:
-		each_frame_encoding = np.array(each_frame_encoding, dtype = np.float32)
-		each_frame_encoding = np.expand_dims(each_frame_encoding, axis=0) 
-
-		loss, _ = model.evaluate(	x = (temporal_encoding, global_encoding, each_frame_encoding, sentence_encoding), 
-									y = (np.zeros((1, DENSE_OUTPUT_FEAT), dtype = np.float32)), 
-									verbose = 0)
-		frame_errors.append(loss)
-	return frame_errors
-
-def get_key_frames(video_errors: [float], threshold: float) -> [int]:
-	video_errors_np 	= np.array(video_errors, dtype = np.float32)
-	normalized_errrors 	= (video_errors_np - min(video_errors_np)) / (max(video_errors_np) - min(video_errors_np))
-	return [int(i >= threshold) for i in normalized_errrors]
+logging.basicConfig(level=logging.INFO)
 
 def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_features: h5py._hl.files.File, sentence_encoding) -> pd.DataFrame:
 	evaluation_df 	= copy.copy(candidate_df)
