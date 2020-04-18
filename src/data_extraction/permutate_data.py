@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd 
+from editing.writer import DatasetWriter
 from numpy import random
 
 FEATURES_FILE 			= os.environ["FEATURES_FILE"]
