@@ -50,7 +50,7 @@ def execute(df: pd.DataFrame):
 
 		ground_truth = ast.literal_eval(row["ground_truth"])
 		ground_truth_shifted = shift_ground_truth(ground_truth = ground_truth, shift = shift_val)
-		df_copied[indx]["ground_truth"] = ground_truth_shifted.tolist()
+		df_copied.loc(indx, "ground_truth") = str(ground_truth_shifted.tolist())
 
 	logging.info("Write out CSV")
 	df_out_path = os.path.join(PERMUTATION_ROOT, "_shift.csv")
