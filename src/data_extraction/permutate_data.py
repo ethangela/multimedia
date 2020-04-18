@@ -50,14 +50,12 @@ def execute(df: pd.DataFrame):
 	for indx, row in df.iterrows():
 		video_name = row["segmented_video_id"].replace('.mp4', '')
 
-		import IPython
-		IPython.embed()
-
 		if video_name not in shift_mappings:
 			shift_val = get_shift()
 			video_feature = video_features_all[video_name]
 			video_feature_shifted = shift_video(video_feature = video_feature, shift = shift_val)
 			video_feature_copied.create_dataset(video_name, data=video_feature_shifted)
+			shift_mappings[video_name] = shift_val
 		else:
 			shift_val = shift_mappings[video_name]
 
