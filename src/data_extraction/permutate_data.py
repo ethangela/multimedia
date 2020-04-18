@@ -22,7 +22,7 @@ def get_shift() -> int:
 	"""
 	return random.randint(low = -1 *SHIFT_MAX_VAL, high = SHIFT_MAX_VAL)
 
-def shift_video(video_feature, shift: int) -> np.ndarray
+def shift_video(video_feature, shift: int) -> np.ndarray:
 	return np.roll(video_feature, shift, axis=0)
 
 def shift_ground_truth(ground_truth: [int], shift: int) -> np.ndarray:
