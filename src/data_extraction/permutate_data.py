@@ -30,8 +30,11 @@ def shift_ground_truth(ground_truth: [int], shift: int) -> np.ndarray:
 
 def execute(df: pd.DataFrame):
 	video_features_all = h5py.File(FEATURES_FILE, "r")
-	video_feature_copied = h5py.File("_shift.hdf5", "w")
+	video_feature_out_path = os.path.join(PERMUTATION_ROOT, "_shift.hdf5")
+	video_feature_copied = h5py.File(video_feature_out_path, "w")
+
 	df_copied = copy.copy(df)
+	df_out_path = os.path.join(PERMUTATION_ROOT, "_shift.csv")
 	results = []
 
 	logging.info("Gittering videos")
