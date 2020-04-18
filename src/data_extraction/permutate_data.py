@@ -30,6 +30,11 @@ def shift_ground_truth(ground_truth: [int], shift: int) -> np.ndarray:
 	return np.roll(ground_truth, shift, axis=0)
 
 def execute(df: pd.DataFrame):
+	prior_video_features = glob.glob(PERMUTATION_ROOT + "/*_shift.hdf5")
+	logging.warning("Deleting prior files: {0}".format(prior_video_features))
+	for prior_files in prior_video_features:
+		os.remove(prior_files)
+
 	video_features_all = h5py.File(FEATURES_FILE, "r")
 	video_feature_out_path = os.path.join(PERMUTATION_ROOT, "_shift.hdf5")
 	video_feature_copied = h5py.File(video_feature_out_path, "w")
