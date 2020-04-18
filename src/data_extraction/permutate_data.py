@@ -40,7 +40,7 @@ def execute(df: pd.DataFrame):
 
 	logging.info("Gittering videos")
 
-	for indx, row in df.iterrow():
+	for indx, row in df.iterrows():
 		shift_val = get_shift()
 		
 		video_name = row["segmented_video_id"].replace('.mp4', '')
