@@ -17,6 +17,7 @@ SHIFT_MAX_VAL 			= os.environ.get("MAX_SHIFT_INDX", 20)
 logging.basicConfig(level=logging.INFO)
 
 data_writer = DatasetWriter()
+shift_mappings = {}
 
 def get_shift() -> int:
 	"""
@@ -47,12 +48,15 @@ def execute(df: pd.DataFrame):
 	logging.info("Gittering videos")
 
 	for indx, row in df.iterrows():
-		shift_val = get_shift()
-		
 		video_name = row["segmented_video_id"].replace('.mp4', '')
-		video_feature = video_features_all[video_name]
-		video_feature_shifted = shift_video(video_feature = video_feature, shift = shift_val)
-		video_feature_copied.create_dataset(video_name, data=video_feature_shifted)
+
+		if video_name not in shift_mappings:
+			shift_val = get_shift()
+			video_feature = video_features_all[video_name]
+			video_feature_shifted = shift_video(video_feature = video_feature, shift = shift_val)
+			video_feature_copied.create_dataset(video_name, data=video_feature_shifted)
+		else:
+			shift_val = shift_mappings[video_name]
 
 		ground_truth = ast.literal_eval(row["ground_truth"])
 		ground_truth_shifted = shift_ground_truth(ground_truth = ground_truth, shift = shift_val)
