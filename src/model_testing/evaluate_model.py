@@ -47,7 +47,7 @@ logging.basicConfig(level=logging.INFO)
 
 def evaluate_df(candidate_df: pd.DataFrame) -> pd.DataFrame:
 	evaluation_df 	= copy.copy(candidate_df)
-	evaluation_df 	= pd.concat([evaluation_df, pd.DataFrame(columns = ["predicted_error", "key_frame_labels"])])
+	evaluation_df 	= pd.concat([evaluation_df, pd.DataFrame(columns = ["score", "key_frame_labels"])])
 
 	test_config = get_config(mode='test')
 	solver = Solver(test_config)
@@ -77,9 +77,6 @@ def init_test(df: pd.DataFrame) -> np.ndarray:
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
 
 		# Take top K videos
-		import IPython
-		IPython.embed()
-
 		best_k_df 			= iou_df.sort_values(by = "score", ascending = True)[0 : K_BEST]
 
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
