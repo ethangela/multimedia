@@ -121,6 +121,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		logging.info("IoU: {0}, Top K: {1}, Selection {2} / {3}".format(IOU, K_BEST, 
 																		correct_selections, total_choices))
 		results.append((correct_selections, total_choices))
+	import IPython
+	IPython.embed()
 	return results
 
 if __name__ == "__main__":
