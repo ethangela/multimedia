@@ -61,9 +61,11 @@ def evaluate_df(candidate_df: pd.DataFrame) -> pd.DataFrame:
 	return evaluation_df
 
 def init_test(df: pd.DataFrame) -> np.ndarray:
-	results 		= []
-	shuffle_df 		= df.sample(frac = 1)
-	filtered_frame 	= filter_frame_count(df = shuffle_df, count = 120)
+	results 			= []
+	shuffle_df 			= df.sample(frac = 1)
+	filtered_frame_120 	= filter_frame_count(df = shuffle_df, count = 120)
+	filtered_frame_121 	= filter_frame_count(df = shuffle_df, count = 121)
+	merged_filtered 	= pd.concat([filtered_frame_120, filtered_frame_121])
 
 	for _, row in filtered_frame[:TEST_TRAILS].iterrows():
 		logging.info("Evaluating video {0} : class {1} : text {2}".format(row["unique_clip_name"], 
