@@ -14,11 +14,8 @@ from model_testing.commons import *
 from evaluate import Solver
 from configs import get_config
 
-MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
 TEST_CSV 			= os.environ["TEST_CSV"]
-FEATURES_FILE 		= os.environ["FEATURES_FILE"]
 
-LSTM_NUM_TIMESTEPS 	= 15
 TEST_TRAILS 		= None
 POSITIVE_SAMPLES 	= None
 NEGATIVE_SAMPLES 	= None
@@ -48,10 +45,9 @@ We do the following:
 
 logging.basicConfig(level=logging.INFO)
 
-def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_features: h5py._hl.files.File, sentence_encoding) -> pd.DataFrame:
+def evaluate_df(candidate_df: pd.DataFrame) -> pd.DataFrame:
 	evaluation_df 	= copy.copy(candidate_df)
 	evaluation_df 	= pd.concat([evaluation_df, pd.DataFrame(columns = ["predicted_error", "key_frame_labels"])])
-	sentence_encoding 	= np.expand_dims(sentence_encoding, axis=0) 
 
 	test_config = get_config(mode='test')
 	solver = Solver(test_config)
@@ -65,7 +61,6 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 	return evaluation_df
 
 def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
-	image_features 	= h5py.File(FEATURES_FILE, "r")
 	results 		= []
 	shuffle_df 		= df.sample(frac = 1)
 
@@ -82,8 +77,7 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
 		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
 
-		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
-											image_features = image_features, sentence_encoding = sentence_encoding_padded)
+		evaluation_df 		= evaluate_df(	candidate_df = union_df)
 
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
 
