@@ -60,7 +60,7 @@ def evaluate_df(candidate_df: pd.DataFrame) -> pd.DataFrame:
 		evaluation_df["score"][indx] = score
 	return evaluation_df
 
-def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
+def init_test(df: pd.DataFrame) -> np.ndarray:
 	results 		= []
 	shuffle_df 		= df.sample(frac = 1)
 
@@ -112,12 +112,8 @@ if __name__ == "__main__":
 	IOU 				= args.iou
 	KEY_FRAME_THRESHOLD = args.key_frame_threshold
 
-	logging.info("Loading model weights from {0}".format(MODEL_WEIGHTS_PATH))
-	model 	= compile_model()
-	model.load_weights(MODEL_WEIGHTS_PATH)
-
 	df 		= pd.read_csv(TEST_CSV)
-	results = init_test(df = df, model = model)
+	results = init_test(df = df)
 
 	logging.info("{0}".format(results))
 
