@@ -50,23 +50,11 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 	sentence_encoding 	= np.expand_dims(sentence_encoding, axis=0) 
 	for indx, row in evaluation_df.iterrows():
 		video_name 			= row["unique_clip_name"].replace('.mp4', '')
-
-		global_encoding 	= get_global_encoding(features = image_features, row = row)
-		global_encoding 	= np.array(global_encoding, dtype = np.float32)
-		global_encoding 	= np.expand_dims(global_encoding, axis=0) 
-
-		frame_encodings 	= image_features[video_name]
-
-		temporal_encoding 	= get_temporal_encoding(row = row)
-		temporal_encoding 	= np.array(temporal_encoding, dtype = np.float32)
-		temporal_encoding 	= np.expand_dims(temporal_encoding, axis=0) 
-
-		video_errors 		= get_video_error(	model = model, global_encoding = global_encoding, 
-												temporal_encoding = temporal_encoding, frame_encodings = frame_encodings, 
-												sentence_encoding = sentence_encoding)
-
-		evaluation_df["predicted_error"][indx] 		= np.mean(video_errors)
-		evaluation_df["key_frame_labels"][indx] 	= get_key_frames(video_errors = video_errors, threshold = KEY_FRAME_THRESHOLD)
+		query 				= row["text"]
+		frames, score 		= solver.test(indx, query, video_name)
+		
+		evaluation_df["key_frame_labels"][indx] = frames
+		evaluation_df["score"][indx] = score
 	return evaluation_df
 
 def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
@@ -93,7 +81,7 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
 
 		# Take top K videos
-		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
+		best_k_df 			= iou_df.sort_values(by = "score", ascending = True)[0 : K_BEST]
 
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
 		total_choices 		= len(best_k_df)
