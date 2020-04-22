@@ -54,7 +54,7 @@ def evaluate_df(candidate_df: pd.DataFrame) -> pd.DataFrame:
 	solver.build()
 
 	for indx, row in evaluation_df.iterrows():
-		video_name 			= row["unique_clip_name"].replace('.mp4', '')
+		video_name 			= row["unique_clip_name"]
 		frames, score 		= solver.test(indx, video_name)	
 		evaluation_df["key_frame_labels"][indx] = frames
 		evaluation_df["score"][indx] = score
@@ -99,6 +99,7 @@ if __name__ == "__main__":
 	parser.add_argument('--key_frame_threshold', type=float ,default=0.7 ,help='threshold (after normalization) to determine if it is a key frame or not')
 
 	args = parser.parse_args()
+	logging.info(args)
 
 	TEST_TRAILS 		= args.test_trails
 	POSITIVE_SAMPLES 	= args.positive_samples
