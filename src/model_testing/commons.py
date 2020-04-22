@@ -3,6 +3,10 @@ import copy
 import numpy as np
 import pandas as pd
 
+def filter_frame_count(df: pd.DataFrame, count: int) -> pd.DataFrame:
+	_df = copy.copy(df)
+	return _df[_df.apply(lambda row: len(ast.literal_eval(row["ground_truth"])) >= count, axis = 1)]
+
 def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
 	candidate_row_class 	= candidate_row["classname"]
 	negative_example_df 	= df[df["classname"] != candidate_row_class]
