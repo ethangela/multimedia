@@ -33,10 +33,10 @@ def get_iou_df(evaluation_df: pd.DataFrame, ground_truth_row):
 		iou_df["iou"][indx] 	= intersection / union
 	return iou_df
 
-def get_correct_vid_selection_count(best_k_df: pd.DataFrame, ground_truth_row):
+def get_correct_vid_selection_count(best_k_df: pd.DataFrame, ground_truth_row, IoU: float):
 	correct_selections = 0
 	for _, row in best_k_df.iterrows():
 		# Assert correct class selection
-		is_correct = (row["classname"] == ground_truth_row["classname"]) and (row["iou"] >= IOU)
+		is_correct = (row["classname"] == ground_truth_row["classname"]) and (row["iou"] >= IoU)
 		correct_selections += int(is_correct)
 	return correct_selections
