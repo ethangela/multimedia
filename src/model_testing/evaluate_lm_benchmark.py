@@ -112,7 +112,7 @@ def init_test(df: pd.DataFrame) -> np.ndarray:
 		iou_df 				= get_iou_df(evaluation_df = evaluation_df, ground_truth_row = row)
 
 		# Take top K videos
-		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = False)[0 : K_BEST]
+		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
 
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row, IoU = IOU)
 		total_choices 		= len(best_k_df)
