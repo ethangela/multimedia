@@ -1,6 +1,9 @@
+"""
+Point PYTHOPATH to video_evaluate package
+"""
+
 import argparse
 import copy
-
 import h5py
 import logging
 import numpy as np
@@ -8,6 +11,8 @@ import os
 import pandas as pd
 from benchmarks.LocalisingMoment.data_preparation import get_language_encoding
 from model_testing.commons import *
+from evaluate import Solver
+from configs import get_config
 
 MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
 TEST_CSV 			= os.environ["TEST_CSV"]
@@ -46,13 +51,15 @@ logging.basicConfig(level=logging.INFO)
 def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_features: h5py._hl.files.File, sentence_encoding) -> pd.DataFrame:
 	evaluation_df 	= copy.copy(candidate_df)
 	evaluation_df 	= pd.concat([evaluation_df, pd.DataFrame(columns = ["predicted_error", "key_frame_labels"])])
-
 	sentence_encoding 	= np.expand_dims(sentence_encoding, axis=0) 
+
+	test_config = get_config(mode='test')
+	solver = Solver(test_config)
+	solver.build()
+
 	for indx, row in evaluation_df.iterrows():
 		video_name 			= row["unique_clip_name"].replace('.mp4', '')
-		query 				= row["text"]
-		frames, score 		= solver.test(indx, query, video_name)
-		
+		frames, score 		= solver.test(indx, video_name)	
 		evaluation_df["key_frame_labels"][indx] = frames
 		evaluation_df["score"][indx] = score
 	return evaluation_df
