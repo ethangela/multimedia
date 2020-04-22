@@ -78,6 +78,8 @@ def init_test(df: pd.DataFrame) -> np.ndarray:
 
 		# Take top K videos
 		best_k_df 			= iou_df.sort_values(by = "score", ascending = True)[0 : K_BEST]
+		import IPython
+		IPython.embed()
 
 		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
 		total_choices 		= len(best_k_df)
