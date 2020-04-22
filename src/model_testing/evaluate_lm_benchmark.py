@@ -102,8 +102,8 @@ def init_test(df: pd.DataFrame) -> np.ndarray:
 		words 						= sentence_encoding.shape[0]
 		sentence_encoding_padded 	= np.pad(sentence_encoding, [(0, LSTM_NUM_TIMESTEPS - words), (0, 0)], mode = 'constant', constant_values = 0)
 
-		positive_sample_df 	= select_same_class_df(df = df, candidate_row = row, size = POSITIVE_SAMPLES)
-		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
+		positive_sample_df 	= select_same_class_df(df = shuffle_df, candidate_row = row, size = POSITIVE_SAMPLES)
+		negative_sample_df 	= select_incorrect_class_df(df = shuffle_df, candidate_row = row, size = NEGATIVE_SAMPLES)
 		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
 
 		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
