@@ -1,4 +1,6 @@
 import ast
+import copy
+import numpy as np
 import pandas as pd
 
 def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
