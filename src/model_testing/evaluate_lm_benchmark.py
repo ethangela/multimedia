@@ -1,4 +1,3 @@
-import ast
 import argparse
 import copy
 import tensorflow as tf 
@@ -9,7 +8,7 @@ import os
 import pandas as pd
 from benchmarks.LocalisingMoment.data_preparation import get_global_encoding, get_language_encoding, get_temporal_encoding
 from benchmarks.LocalisingMoment.model import compile_model
-from bert_embedding import BertEmbedding
+from model_testing.commons import *
 
 MODEL_WEIGHTS_PATH 	= os.environ["MODEL_WEIGHTS_PATH"]
 TEST_CSV 			= os.environ["TEST_CSV"]
@@ -24,7 +23,6 @@ K_BEST				= None
 IOU 				= None
 KEY_FRAME_THRESHOLD = None
 
-bert_embedding 		= BertEmbedding()
 logging.basicConfig(level=logging.INFO)
 
 """
@@ -47,18 +45,6 @@ We do the following:
 8) Identify #videos with IoU > m and correct classes from baseline
 """
 
-def select_incorrect_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
-	candidate_row_class 	= candidate_row["classname"]
-	negative_example_df 	= df[df["classname"] != candidate_row_class]
-	shuffled_df 			= negative_example_df.sample(frac = 1)
-	return shuffled_df[:NEGATIVE_SAMPLES]
-
-def select_same_class_df(df: pd.DataFrame, candidate_row, size: int) -> pd.DataFrame:
-	candidate_row_class 	= candidate_row["classname"]
-	positive_example_df 	= df[df["classname"] == candidate_row_class]
-	shuffled_df 			= positive_example_df.sample(frac = 1)
-	return shuffled_df[:POSITIVE_SAMPLES]
-
 def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, sentence_encoding):
 	frame_errors = []
 	for each_frame_encoding in frame_encodings:
@@ -74,7 +60,7 @@ def get_video_error(model, global_encoding, temporal_encoding, frame_encodings, 
 def get_key_frames(video_errors: [float], threshold: float) -> [int]:
 	video_errors_np 	= np.array(video_errors, dtype = np.float32)
 	normalized_errrors 	= (video_errors_np - min(video_errors_np)) / (max(video_errors_np) - min(video_errors_np))
-	return [int(i >= KEY_FRAME_THRESHOLD) for i in normalized_errrors]
+	return [int(i >= threshold) for i in normalized_errrors]
 
 def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_features: h5py._hl.files.File, sentence_encoding) -> pd.DataFrame:
 	evaluation_df 	= copy.copy(candidate_df)
@@ -102,33 +88,7 @@ def evaluate_df(candidate_df: pd.DataFrame, model: tf.keras.Model, image_feature
 		evaluation_df["key_frame_labels"][indx] 	= get_key_frames(video_errors = video_errors, threshold = KEY_FRAME_THRESHOLD)
 	return evaluation_df
 
-def get_iou_df(evaluation_df: pd.DataFrame, ground_truth_row):
-	iou_df 		= copy.copy(evaluation_df)
-	iou_df 		= pd.concat([iou_df, pd.DataFrame(columns = ["iou"])])
-	
-	for indx, row in iou_df.iterrows():
-		predicted_np 			= np.array(evaluation_df["key_frame_labels"][indx], dtype = int)
-
-		ground_truth_labels 	= ast.literal_eval(ground_truth_row["ground_truth"])
-		ground_truth_np 		= np.array(ground_truth_labels, dtype = int)
-
-		intersection 			= 0
-		for i in range(min(len(predicted_np), len(ground_truth_np))):
-			intersection 		+= 1 if predicted_np[i] == ground_truth_np[i] == 1 else 0
-
-		union 					= sum(ground_truth_np) + sum(predicted_np) - intersection
-		iou_df["iou"][indx] 	= intersection / union
-	return iou_df
-
-def get_correct_vid_selection_count(best_k_df: pd.DataFrame, ground_truth_row):
-	correct_selections = 0
-	for _, row in best_k_df.iterrows():
-		# Assert correct class selection
-		is_correct = (row["classname"] == ground_truth_row["classname"]) and (row["iou"] >= IOU)
-		correct_selections += int(is_correct)
-	return correct_selections
-
-def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
+def init_test(df: pd.DataFrame) -> np.ndarray:
 	image_features 	= h5py.File(FEATURES_FILE, "r")
 	results 		= []
 	shuffle_df 		= df.sample(frac = 1)
@@ -142,8 +102,8 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		words 						= sentence_encoding.shape[0]
 		sentence_encoding_padded 	= np.pad(sentence_encoding, [(0, LSTM_NUM_TIMESTEPS - words), (0, 0)], mode = 'constant', constant_values = 0)
 
-		positive_sample_df 	= select_same_class_df(df = df, candidate_row = row, size = POSITIVE_SAMPLES)
-		negative_sample_df 	= select_incorrect_class_df(df = df, candidate_row = row, size = NEGATIVE_SAMPLES)
+		positive_sample_df 	= select_same_class_df(df = shuffle_df, candidate_row = row, size = POSITIVE_SAMPLES)
+		negative_sample_df 	= select_incorrect_class_df(df = shuffle_df, candidate_row = row, size = NEGATIVE_SAMPLES)
 		union_df 			= pd.concat([positive_sample_df, negative_sample_df])
 
 		evaluation_df 		= evaluate_df(	candidate_df = union_df, model = model, 
@@ -154,13 +114,15 @@ def init_test(df: pd.DataFrame, model: tf.keras.Model) -> np.ndarray:
 		# Take top K videos
 		best_k_df 			= iou_df.sort_values(by = "predicted_error", ascending = True)[0 : K_BEST]
 
-		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row)
+		correct_selections 	= get_correct_vid_selection_count(best_k_df = best_k_df, ground_truth_row = row, IoU = IOU)
 		total_choices 		= len(best_k_df)
 
 		logging.info("Max IOU {0}".format(iou_df["iou"].max()))
 		logging.info("IoU: {0}, Top K: {1}, Selection {2} / {3}".format(IOU, K_BEST, 
 																		correct_selections, total_choices))
 		results.append((correct_selections, total_choices))
+	import IPython
+	IPython.embed()
 	return results
 
 if __name__ == "__main__":
@@ -182,12 +144,8 @@ if __name__ == "__main__":
 	IOU 				= args.iou
 	KEY_FRAME_THRESHOLD = args.key_frame_threshold
 
-	logging.info("Loading model weights from {0}".format(MODEL_WEIGHTS_PATH))
-	model 	= compile_model()
-	model.load_weights(MODEL_WEIGHTS_PATH)
-
 	df 		= pd.read_csv(TEST_CSV)
-	results = init_test(df = df, model = model)
+	results = init_test(df = df)
 
 	logging.info("{0}".format(results))
 
